@@ -1,0 +1,607 @@
+ID	Name	Category
+LI.M0	targets of FOSL1/2	TF targets
+LI.M1.0	integrin cell surface interactions (I)	molecular function
+LI.M1.1	integrin cell surface interactions (II)	molecular function
+LI.M2.0	extracellular matrix (I)	location
+LI.M2.1	extracellular matrix (II)	location
+LI.M2.2	extracellular matrix (III)	location
+LI.M3	regulation of signal transduction	signaling
+LI.M4.0	cell cycle and transcription	biological process
+LI.M4.1	cell cycle (I)	biological process
+LI.M4.2	PLK1 signaling events	signaling
+LI.M4.3	myeloid cell enriched receptors and transporters	immune
+LI.M4.4	mitotic cell cycle - DNA replication	biological process
+LI.M4.5	mitotic cell cycle in stimulated CD4 T cells	biological process
+LI.M4.6	cell division in stimulated CD4 T cells	biological process
+LI.M4.7	mitotic cell cycle	biological process
+LI.M4.8	cell division - E2F transcription network	biological process
+LI.M4.9	mitotic cell cycle in stimulated CD4 T cells	biological process
+LI.M4.10	cell cycle (II)	biological process
+LI.M4.11	mitotic cell cycle in stimulated CD4 T cells	biological process
+LI.M4.12	C-MYC transcriptional network	TF targets
+LI.M4.13	cell junction (GO)	location
+LI.M4.14	Rho GTPase cycle	signaling
+LI.M4.15	enriched in monocytes (I)	immune
+LI.M5.0	regulation of antigen presentation and immune response	immune
+LI.M5.1	T cell activation and signaling	immune
+LI.M6	mitotic cell division	biological process
+LI.M7.0	enriched in T cells (I)	immune
+LI.M7.1	T cell activation (I)	immune
+LI.M7.2	enriched in NK cells (I)	immune
+LI.M7.3	T cell activation (II)	immune
+LI.M7.4	T cell activation (III)	immune
+LI.M8	E2F transcription factor network	TF targets
+LI.M9	B cell development	immune
+LI.M10.0	E2F1 targets (Q3)	TF targets
+LI.M10.1	E2F1 targets (Q4)	TF targets
+LI.M11.0	enriched in monocytes (II)	immune
+LI.M11.1	blood coagulation	biological process
+LI.M11.2	formyl peptide receptor mediated neutrophil response	signaling
+LI.M12	CD28 costimulation	immune
+LI.M13	innate activation by cytosolic DNA sensing	immune
+LI.M14	T cell differentiation	immune
+LI.M15	Ran mediated mitosis	signaling
+LI.M16	TLR and inflammatory signaling	immune
+LI.M17.0	Hox cluster I	molecular function
+LI.M17.1	Hox cluster II	molecular function
+LI.M17.2	Hox cluster III	molecular function
+LI.M17.3	Hox cluster IV	molecular function
+LI.M18	T cell differentiation via ITK and PKC	immune
+LI.M19	T cell differentiation (Th2)	immune
+LI.M20	AP-1 transcription factor network	TF targets
+LI.M21	cell adhesion (lymphocyte homing)	molecular function
+LI.M22.0	mismatch repair (I)	biological process
+LI.M22.1	mismatch repair (II)	biological process
+LI.M23	RA, WNT, CSF receptors network (monocyte)	immune
+LI.M24	cell activation (IL15, IL23, TNF)	immune
+LI.M25	TLR8-BAFF network	immune
+LI.M26.0	TBA	
+LI.M26.1	TBA	
+LI.M26.2	TBA	
+LI.M27.0	chemokine cluster (I)	immune
+LI.M27.1	chemokine cluster (II)	immune
+LI.M28	antigen presentation (lipids and proteins)	immune
+LI.M29	proinflammatory cytokines and chemokines	immune
+LI.M30	cell movement, Adhesion & Platelet activation	biological process
+LI.M31	cell cycle and growth arrest	biological process
+LI.M32.0	platelet activation (I)	biological process
+LI.M32.1	platelet activation (II)	biological process
+LI.M32.2	CORO1A-DEF6 network (I)	immune
+LI.M32.3	KLF12 targets network	TF targets
+LI.M32.4	CORO1A-DEF6 network (II)	immune
+LI.M32.5	TBA	
+LI.M32.6	TBA	
+LI.M32.7	TBA	
+LI.M32.8	cytoskeletal remodeling	biological process
+LI.M33	inflammatory response	immune
+LI.M34	cytoskeletal remodeling (enriched for SRF targets)	biological process
+LI.M35.0	signaling in T cells (I)	immune
+LI.M35.1	signaling in T cells (II)	immune
+LI.M36	T cell surface, activation	immune
+LI.M37.0	immune activation - generic cluster	immune
+LI.M37.1	enriched in neutrophils (I)	immune
+LI.M37.2	endoplasmic reticulum	location
+LI.M37.3	cell division	biological process
+LI.M38	chemokines and receptors	immune
+LI.M39	integrin mediated leukocyte migration	biological process
+LI.M40	complement and other receptors in DCs	immune
+LI.M41.0	TBA	
+LI.M41.1	TBA	
+LI.M41.2	TBA	
+LI.M41.3	TBA	
+LI.M41.4	ATF targets network	TF targets
+LI.M42	platelet activation (III)	biological process
+LI.M43.0	myeloid, dendritic cell activation via NFkB (I)	immune
+LI.M43.1	myeloid, dendritic cell activation via NFkB (II)	immune
+LI.M44	T cell signaling and costimulation	immune
+LI.M45	leukocyte activation and migration	biological process
+LI.M46	cell division stimulated CD4+ T cells	biological process
+LI.M47.0	enriched in B cells (I)	immune
+LI.M47.1	enriched in B cells (II)	immune
+LI.M47.2	enriched in B cells (III)	immune
+LI.M47.3	enriched in B cells (IV)	immune
+LI.M47.4	enriched in B cells (V)	immune
+LI.M48	TBA	
+LI.M49	transcription regulation in cell development	biological process
+LI.M50	CD1 and other DC receptors	immune
+LI.M51	cell adhesion	molecular function
+LI.M52	T cell activation (IV)	immune
+LI.M53	inflammasome receptors and signaling	immune
+LI.M54	BCR signaling	immune
+LI.M55	TBA	
+LI.M56	suppression of MAPK signaling	signaling
+LI.M57	immuregulation - monocytes, T and B cells	immune
+LI.M58	B cell development/activation	immune
+LI.M59	CCR1, 7 and cell signaling	immune
+LI.M60	lymphocyte generic cluster	immune
+LI.M61.0	enriched in NK cells (II)	immune
+LI.M61.1	enriched in NK cells (KIR cluster)	immune
+LI.M61.2	enriched in NK cells (receptor activation)	immune
+LI.M62.0	T & B cell development, activation	immune
+LI.M62.1	enriched for unknown TF motif CTCNANGTGNY	TF targets
+LI.M63	regulation of localization (GO)	biological process
+LI.M64	enriched in activated dendritic cells/monocytes	immune
+LI.M65	IL2, IL7, TCR network	immune
+LI.M66	TBA	
+LI.M67	activated dendritic cells	immune
+LI.M68	RIG-1 like receptor signaling	immune
+LI.M69	enriched in B cells (VI)	immune
+LI.M70.0	TBA	
+LI.M70.1	TBA	
+LI.M71	enriched in antigen presentation (I)	immune
+LI.M72.0	TBA	
+LI.M72.1	TBA	
+LI.M72.2	TBA	
+LI.M73	enriched in monocytes (III)	immune
+LI.M74	transcriptional targets of glucocorticoid receptor	TF targets
+LI.M75	antiviral IFN signature	immune
+LI.M76	DNA repair	biological process
+LI.M77	collagen, TGFB family et al	molecular function
+LI.M78	myeloid cell cytokines, metallopeptidases and laminins	immune
+LI.M79	TBA	
+LI.M80	TBA	
+LI.M81	enriched in myeloid cells and monocytes	immune
+LI.M82	signal transduction, plasma membrane	signaling
+LI.M83	enriched in naive and memory B cells	immune
+LI.M84	integrins and cell adhesion	molecular function
+LI.M85	platelet activation and degranulation	biological process
+LI.M86.0	chemokines and inflammatory molecules in myeloid cells	immune
+LI.M86.1	proinflammatory dendritic cell, myeloid cell response	immune
+LI.M87	transmembrane transport (I)	molecular function
+LI.M88.0	leukocyte migration	biological process
+LI.M88.1	enriched in hepatocyte nuclear factors (I)	molecular function
+LI.M88.2	enriched in hepatocyte nuclear factors (II)	molecular function
+LI.M89.0	putative targets of PAX3	TF targets
+LI.M89.1	putative targets of PAX3	TF targets
+LI.M90	TBA	
+LI.M91	adhesion and migration, chemotaxis	biological process
+LI.M92	lipid metabolism, endoplasmic reticulum	molecular function
+LI.M93	TBA	
+LI.M94	growth factor induced, enriched in nuclear receptor subfamily 4	signaling
+LI.M95.0	enriched in antigen presentation (II)	immune
+LI.M95.1	enriched in antigen presentation (III)	immune
+LI.M96	Hox cluster V	molecular function
+LI.M97	enriched for SMAD2/3 signaling	signaling
+LI.M98.0	TBA	
+LI.M98.1	TBA	
+LI.M99	TBA	
+LI.M100	MAPK, RAS signaling	signaling
+LI.M101	phosphatidylinositol signaling system	signaling
+LI.M102	TBA	
+LI.M103	cell cycle (III)	biological process
+LI.M104	TBA	
+LI.M105	TBA	
+LI.M106.0	nuclear pore complex	molecular function
+LI.M106.1	nuclear pore complex (mitosis)	molecular function
+LI.M107	Hox cluster VI	molecular function
+LI.M108	TBA	
+LI.M109	receptors, cell migration	molecular function
+LI.M110	axon guidance	biological process
+LI.M111.0	viral sensing & immunity; IRF2 targets network (I)	immune
+LI.M111.1	viral sensing & immunity; IRF2 targets network (II)	immune
+LI.M112.0	complement activation (I)	immune
+LI.M112.1	complement activation (II)	immune
+LI.M113	golgi membrane (I)	location
+LI.M114.0	TBA	
+LI.M114.1	glycerophospholipid metabolism	molecular function
+LI.M115	cytokines - recepters cluster	immune
+LI.M116	TBA	
+LI.M117	cell adhesion (GO)	molecular function
+LI.M118.0	enriched in monocytes (IV)	immune
+LI.M118.1	enriched in monocytes (surface)	immune
+LI.M119	enriched in activated dendritic cells (I)	immune
+LI.M120	TBA	
+LI.M121	TBA	
+LI.M122	enriched for cell migration	biological process
+LI.M123	enriched in B cell differentiation	immune
+LI.M124	enriched in membrane proteins	location
+LI.M125	TBA	
+LI.M126	double positive thymocytes	immune
+LI.M127	type I interferon response	immune
+LI.M128	TBA	
+LI.M129	inositol phosphate metabolism	molecular function
+LI.M130	enriched in G-protein coupled receptors	molecular function
+LI.M131	TBA	
+LI.M132	recruitment of neutrophils	immune
+LI.M133.0	cell adhesion, membrane	molecular function
+LI.M133.1	cell cell adhesion	molecular function
+LI.M134	Membrane, ER proteins	location
+LI.M135.0	enriched in plasma membrane proteins (I)	location
+LI.M135.1	enriched in plasma membrane proteins (II)	location
+LI.M136	TBA	
+LI.M137	TBA	
+LI.M138	enriched for ubiquitination	molecular function
+LI.M139	lysosomal/endosomal proteins	location
+LI.M140	extracellular matrix, complement	location
+LI.M141	TBA	
+LI.M142	transmembrane and ion transporters (I)	molecular function
+LI.M143	nuclear pore, transport; mRNA splicing, processing	molecular function
+LI.M144	cell cycle, ATP binding	biological process
+LI.M145.0	cytoskeleton/actin (SRF transcription targets)	molecular function
+LI.M145.1	cytoskeleton/actin (SRF transcription targets)	molecular function
+LI.M146	MHC-TLR7-TLR8 cluster	immune
+LI.M147	intracellular transport	molecular function
+LI.M148	TBA	
+LI.M149	TBA	
+LI.M150	innate antiviral response	immune
+LI.M151	TBA	
+LI.M152.0	TBA (source: B cells)	
+LI.M152.1	TBA (source: naive B cells)	
+LI.M152.2	TBA (source: memory B cells)	
+LI.M153	TBA	
+LI.M154.0	amino acid metabolism and transport	molecular function
+LI.M154.1	transmembrane transport (SLC cluster)	molecular function
+LI.M155	G protein coupled receptors cluster	molecular function
+LI.M156.0	plasma cells & B cells, immunoglobulins	immune
+LI.M156.1	plasma cells, immunoglobulins	immune
+LI.M157	enriched in NK cells (III)	immune
+LI.M158.0	interferon alpha response (I)	immune
+LI.M158.1	interferon alpha response (II)	immune
+LI.M159	G protein mediated calcium signaling	signaling
+LI.M160	leukocyte differentiation	biological process
+LI.M161	TBA	
+LI.M162.0	plasma membrane, cell junction	location
+LI.M162.1	cell junction	location
+LI.M163	enriched in neutrophils (II)	immune
+LI.M164	xenobiotic metabolism	molecular function
+LI.M165	enriched in activated dendritic cells (II)	immune
+LI.M166	TBA	
+LI.M167	enriched in cell cycle	biological process
+LI.M168	enriched in dendritic cells	immune
+LI.M169	mitosis (TF motif CCAATNNSNNNGCG)	biological process
+LI.M170	TBA	
+LI.M171	heme biosynthesis (I)	biological process
+LI.M172	enriched for TF motif TTCNRGNNNNTTC	TF targets
+LI.M173	erythrocyte differentiation	biological process
+LI.M174	TBA	
+LI.M175	cell development	biological process
+LI.M176	TBA	
+LI.M177.0	TBA	
+LI.M177.1	TBA	
+LI.M178	enriched for promoter motif NATCACGTGAY (putative SREBF1 targets)	TF targets
+LI.M179	enriched for TF motif PAX3	TF targets
+LI.M180	TBA	
+LI.M181	nucleotide metabolism	molecular function
+LI.M182	enriched in DNA interacting proteins	molecular function
+LI.M183	TBA	
+LI.M184.0	TBA	
+LI.M184.1	TBA	
+LI.M185	TBA	
+LI.M186	TBA	
+LI.M187	metabolism in mitochondria, peroxisome	location
+LI.M188	TBA	
+LI.M189	extracellular region cluster (GO)	location
+LI.M190	TBA	
+LI.M191	transmembrane transport (II)	molecular function
+LI.M192	TBA	
+LI.M193	TBA	
+LI.M194	TBA	
+LI.M195	muscle contraction, SRF targets	molecular function
+LI.M196	platelet activation - actin binding	molecular function
+LI.M197	TBA	
+LI.M198	TBA	
+LI.M199	platelet activation & blood coagulation	biological process
+LI.M200	antigen processing and presentation	immune
+LI.M201	TBA	
+LI.M202	enriched in extracellular matrix & associated proteins	location
+LI.M203	TBA	
+LI.M204.0	chaperonin mediated protein folding (I)	biological process
+LI.M204.1	chaperonin mediated protein folding (II)	biological process
+LI.M205	TBA	
+LI.M206	Wnt signaling pathway	signaling
+LI.M207	TBA	
+LI.M208	TBA	
+LI.M209	lysosome	location
+LI.M210	extracellular matrix, collagen	location
+LI.M211	TBA	
+LI.M212	purine nucleotide biosynthesis	molecular function
+LI.M213	regulation of transcription, transcription factors	biological process
+LI.M214	TBA	
+LI.M215	small GTPase mediated signal transduction	signaling
+LI.M216	respiratory electron transport chain (mitochondrion)	location
+LI.M217	TBA (source: B cells)	
+LI.M218	TBA	
+LI.M219	respiratory electron transport chain (mitochondrion)	location
+LI.M220	TBA	
+LI.M221	TBA	
+LI.M222	heme biosynthesis (II)	biological process
+LI.M223	enriched in T cells (II)	immune
+LI.M224	transmembrane and ion transporters (II)	molecular function
+LI.M225	metabolism of steroids	molecular function
+LI.M226	proteasome	molecular function
+LI.M227	translation initiation	biological process
+LI.M228	olfactory receptors	molecular function
+LI.M229	TBA	
+LI.M230	cell cycle, mitotic phase	biological process
+LI.M231	respiratory electron transport chain (mitochondrion)	location
+LI.M232	enriched for TF motif TNCATNTCCYR	TF targets
+LI.M233	TBA	
+LI.M234	transcription elongation, RNA polymerase II	biological process
+LI.M235	mitochondrial cluster	location
+LI.M236	TBA	
+LI.M237	golgi membrane (II)	location
+LI.M238	respiratory electron transport chain (mitochondrion)	location
+LI.M239	enriched in calcium signaling proteins	signaling
+LI.M240	chromosome Y linked	molecular function
+LI.M241	TBA	
+LI.M242	TBA	
+LI.M243	TBA	
+LI.M244	TBA	
+LI.M245	translation initiation factor 3 complex	molecular function
+LI.M246	TBA	
+LI.M247	enriched in nuclear pore complex interacting proteins	molecular function
+LI.M248	TBA	
+LI.M249	TBA	
+LI.M250	spliceosome	molecular function
+LI.S0	T cell surface signature	immune
+LI.S1	NK cell surface signature	immune
+LI.S2	B cell surface signature	immune
+LI.S3	Plasma cell surface signature	immune
+LI.S4	Monocyte surface signature	immune
+LI.S5	DC surface signature	immune
+LI.S6	CD4 T cell surface signature Th1-stimulated	immune
+LI.S7	CD4 T cell surface signature Th2-stimulated	immune
+LI.S8	Naive B cell surface signature	immune
+LI.S9	Memory B cell surface signature	immune
+LI.S10	Resting dendritic cell surface signature	immune
+LI.S11	Activated (LPS) dendritic cell surface signature	immune
+DC.M1.1	Platelets	DC.M1
+DC.M1.2	Interferon	DC.M1
+DC.M2.1	Undetermined	DC.M2
+DC.M2.2	Cell Cycle	DC.M2
+DC.M2.3	Erythrocytes	DC.M2
+DC.M3.1	Erythrocytes	DC.M3
+DC.M3.2	Inflammation	DC.M3
+DC.M3.3	Cell Cycle	DC.M3
+DC.M3.4	Interferon	DC.M3
+DC.M3.5	Cell Cycle	DC.M3
+DC.M3.6	Cytotoxic/NK Cell	DC.M3
+DC.M4.1	T cell	DC.M4
+DC.M4.2	Inflammation	DC.M4
+DC.M4.3	Protein Synthesis	DC.M4
+DC.M4.4	Undetermined	DC.M4
+DC.M4.5	Protein Synthesis	DC.M4
+DC.M4.6	Inflammation	DC.M4
+DC.M4.7	Cell Cycle	DC.M4
+DC.M4.8	Undetermined	DC.M4
+DC.M4.9	Undetermined	DC.M4
+DC.M4.10	B cell	DC.M4
+DC.M4.11	Plasma Cells	DC.M4
+DC.M4.12	Undetermined	DC.M4
+DC.M4.13	Inflammation	DC.M4
+DC.M4.14	Monocytes	DC.M4
+DC.M4.15	T cells	DC.M4
+DC.M4.16	Undetermined	DC.M4
+DC.M5.1	Inflammation	DC.M5
+DC.M5.2	Undetermined	DC.M5
+DC.M5.3	Undetermined	DC.M5
+DC.M5.4	Undetermined	DC.M5
+DC.M5.5	Undetermined	DC.M5
+DC.M5.6	Mitochondrial Stress / Proteasome	DC.M5
+DC.M5.7	Inflammation	DC.M5
+DC.M5.8	Undetermined	DC.M5
+DC.M5.9	Protein Synthesis	DC.M5
+DC.M5.10	Mitochondrial Respiration	DC.M5
+DC.M5.11	Undetermined	DC.M5
+DC.M5.12	Interferon	DC.M5
+DC.M5.13	Undetermined	DC.M5
+DC.M5.14	Undetermined	DC.M5
+DC.M5.15	Neutrophils	DC.M5
+DC.M6.1	Undetermined	DC.M6
+DC.M6.2	Mitochondrial Respiration	DC.M6
+DC.M6.3	Undetermined	DC.M6
+DC.M6.4	Undetermined	DC.M6
+DC.M6.5	Undetermined	DC.M6
+DC.M6.6	Apoptosis / Survival	DC.M6
+DC.M6.7	Undetermined	DC.M6
+DC.M6.8	Undetermined	DC.M6
+DC.M6.9	Undetermined	DC.M6
+DC.M6.10	Undetermined	DC.M6
+DC.M6.11	Cell Cycle	DC.M6
+DC.M6.12	Mitochondrial Stress	DC.M6
+DC.M6.13	Cell Death	DC.M6
+DC.M6.14	Undetermined	DC.M6
+DC.M6.15	Undetermined	DC.M6
+DC.M6.16	Cell Cycle	DC.M6
+DC.M6.17	Undetermined	DC.M6
+DC.M6.18	Erythrocytes	DC.M6
+DC.M6.19	Undetermined	DC.M6
+DC.M6.20	Undetermined	DC.M6
+DC.M7.1	Inflammation	DC.M7
+DC.M7.2	Undetermined	DC.M7
+DC.M7.3	Undetermined	DC.M7
+DC.M7.4	Undetermined	DC.M7
+DC.M7.5	Undetermined	DC.M7
+DC.M7.6	Undetermined	DC.M7
+DC.M7.7	Undetermined	DC.M7
+DC.M7.8	Undetermined	DC.M7
+DC.M7.9	Undetermined	DC.M7
+DC.M7.10	Undetermined	DC.M7
+DC.M7.11	Undetermined	DC.M7
+DC.M7.12	Undetermined	DC.M7
+DC.M7.13	Undetermined	DC.M7
+DC.M7.14	Undetermined	DC.M7
+DC.M7.15	Undetermined	DC.M7
+DC.M7.16	Undetermined	DC.M7
+DC.M7.17	Undetermined	DC.M7
+DC.M7.18	Undetermined	DC.M7
+DC.M7.19	Undetermined	DC.M7
+DC.M7.20	Undetermined	DC.M7
+DC.M7.21	Undetermined	DC.M7
+DC.M7.22	Undetermined	DC.M7
+DC.M7.23	Undetermined	DC.M7
+DC.M7.24	Undetermined	DC.M7
+DC.M7.25	Undetermined	DC.M7
+DC.M7.26	Undetermined	DC.M7
+DC.M7.27	Undetermined	DC.M7
+DC.M7.28	Undetermined	DC.M7
+DC.M7.29	Undetermined	DC.M7
+DC.M7.30	Undetermined	DC.M7
+DC.M7.31	Undetermined	DC.M7
+DC.M7.32	Undetermined	DC.M7
+DC.M7.33	Undetermined	DC.M7
+DC.M7.34	Undetermined	DC.M7
+DC.M7.35	Undetermined	DC.M7
+DC.M8.1	Undetermined	DC.M8
+DC.M8.2	Undetermined	DC.M8
+DC.M8.3	Undetermined	DC.M8
+DC.M8.4	Undetermined	DC.M8
+DC.M8.5	Undetermined	DC.M8
+DC.M8.6	Undetermined	DC.M8
+DC.M8.7	Undetermined	DC.M8
+DC.M8.8	Undetermined	DC.M8
+DC.M8.9	Undetermined	DC.M8
+DC.M8.10	Undetermined	DC.M8
+DC.M8.11	Undetermined	DC.M8
+DC.M8.12	Undetermined	DC.M8
+DC.M8.13	Undetermined	DC.M8
+DC.M8.14	Undetermined	DC.M8
+DC.M8.15	Undetermined	DC.M8
+DC.M8.16	Undetermined	DC.M8
+DC.M8.17	Undetermined	DC.M8
+DC.M8.18	Undetermined	DC.M8
+DC.M8.19	Undetermined	DC.M8
+DC.M8.20	Undetermined	DC.M8
+DC.M8.21	Undetermined	DC.M8
+DC.M8.22	Undetermined	DC.M8
+DC.M8.23	Undetermined	DC.M8
+DC.M8.24	Undetermined	DC.M8
+DC.M8.25	Undetermined	DC.M8
+DC.M8.26	Undetermined	DC.M8
+DC.M8.27	Undetermined	DC.M8
+DC.M8.28	Undetermined	DC.M8
+DC.M8.29	Undetermined	DC.M8
+DC.M8.30	Undetermined	DC.M8
+DC.M8.31	Undetermined	DC.M8
+DC.M8.32	Undetermined	DC.M8
+DC.M8.33	Undetermined	DC.M8
+DC.M8.34	Undetermined	DC.M8
+DC.M8.35	Undetermined	DC.M8
+DC.M8.36	Undetermined	DC.M8
+DC.M8.37	Undetermined	DC.M8
+DC.M8.38	Undetermined	DC.M8
+DC.M8.39	Undetermined	DC.M8
+DC.M8.40	Undetermined	DC.M8
+DC.M8.41	Undetermined	DC.M8
+DC.M8.42	Undetermined	DC.M8
+DC.M8.43	Undetermined	DC.M8
+DC.M8.44	Undetermined	DC.M8
+DC.M8.45	Undetermined	DC.M8
+DC.M8.46	Cytotoxic/NK	DC.M8
+DC.M8.47	Undetermined	DC.M8
+DC.M8.48	Undetermined	DC.M8
+DC.M8.49	Undetermined	DC.M8
+DC.M8.50	Undetermined	DC.M8
+DC.M8.51	Undetermined	DC.M8
+DC.M8.52	Undetermined	DC.M8
+DC.M8.53	Undetermined	DC.M8
+DC.M8.54	Undetermined	DC.M8
+DC.M8.55	Undetermined	DC.M8
+DC.M8.56	Undetermined	DC.M8
+DC.M8.57	Undetermined	DC.M8
+DC.M8.58	Undetermined	DC.M8
+DC.M8.59	Undetermined	DC.M8
+DC.M8.60	Undetermined	DC.M8
+DC.M8.61	Undetermined	DC.M8
+DC.M8.62	Undetermined	DC.M8
+DC.M8.63	Undetermined	DC.M8
+DC.M8.64	Undetermined	DC.M8
+DC.M8.65	Undetermined	DC.M8
+DC.M8.66	Undetermined	DC.M8
+DC.M8.67	Undetermined	DC.M8
+DC.M8.68	Undetermined	DC.M8
+DC.M8.69	Undetermined	DC.M8
+DC.M8.70	Undetermined	DC.M8
+DC.M8.71	Undetermined	DC.M8
+DC.M8.72	Undetermined	DC.M8
+DC.M8.73	Undetermined	DC.M8
+DC.M8.74	Undetermined	DC.M8
+DC.M8.75	Undetermined	DC.M8
+DC.M8.76	Undetermined	DC.M8
+DC.M8.77	Undetermined	DC.M8
+DC.M8.78	Undetermined	DC.M8
+DC.M8.79	Undetermined	DC.M8
+DC.M8.80	Undetermined	DC.M8
+DC.M8.81	Undetermined	DC.M8
+DC.M8.82	Undetermined	DC.M8
+DC.M8.83	Immune Responses	DC.M8
+DC.M8.84	Undetermined	DC.M8
+DC.M8.85	Undetermined	DC.M8
+DC.M8.86	Undetermined	DC.M8
+DC.M8.87	Undetermined	DC.M8
+DC.M8.88	Undetermined	DC.M8
+DC.M8.89	Undetermined	DC.M8
+DC.M8.90	Undetermined	DC.M8
+DC.M8.91	Undetermined	DC.M8
+DC.M8.92	Undetermined	DC.M8
+DC.M8.93	Undetermined	DC.M8
+DC.M8.94	Undetermined	DC.M8
+DC.M8.95	Undetermined	DC.M8
+DC.M8.96	Undetermined	DC.M8
+DC.M8.97	Undetermined	DC.M8
+DC.M8.98	Undetermined	DC.M8
+DC.M8.99	Undetermined	DC.M8
+DC.M8.100	Undetermined	DC.M8
+DC.M8.101	Undetermined	DC.M8
+DC.M8.102	Undetermined	DC.M8
+DC.M8.103	Undetermined	DC.M8
+DC.M8.104	Undetermined	DC.M8
+DC.M8.105	Undetermined	DC.M8
+DC.M8.106	Undetermined	DC.M8
+DC.M8.107	Undetermined	DC.M8
+DC.M8.108	Undetermined	DC.M8
+DC.M8.109	Undetermined	DC.M8
+DC.M8.110	Undetermined	DC.M8
+DC.M8.111	Undetermined	DC.M8
+DC.M9.1	Undetermined	DC.M9
+DC.M9.2	Undetermined	DC.M9
+DC.M9.3	Undetermined	DC.M9
+DC.M9.4	Undetermined	DC.M9
+DC.M9.5	Undetermined	DC.M9
+DC.M9.6	Undetermined	DC.M9
+DC.M9.7	Undetermined	DC.M9
+DC.M9.8	Undetermined	DC.M9
+DC.M9.9	Undetermined	DC.M9
+DC.M9.10	Undetermined	DC.M9
+DC.M9.11	Undetermined	DC.M9
+DC.M9.12	Undetermined	DC.M9
+DC.M9.13	Undetermined	DC.M9
+DC.M9.14	Undetermined	DC.M9
+DC.M9.15	Undetermined	DC.M9
+DC.M9.16	Undetermined	DC.M9
+DC.M9.17	Undetermined	DC.M9
+DC.M9.18	Undetermined	DC.M9
+DC.M9.19	Undetermined	DC.M9
+DC.M9.20	Undetermined	DC.M9
+DC.M9.21	Undetermined	DC.M9
+DC.M9.22	Undetermined	DC.M9
+DC.M9.23	Undetermined	DC.M9
+DC.M9.24	Undetermined	DC.M9
+DC.M9.25	Undetermined	DC.M9
+DC.M9.26	Undetermined	DC.M9
+DC.M9.27	Undetermined	DC.M9
+DC.M9.28	Undetermined	DC.M9
+DC.M9.29	Undetermined	DC.M9
+DC.M9.30	Undetermined	DC.M9
+DC.M9.31	Undetermined	DC.M9
+DC.M9.32	Undetermined	DC.M9
+DC.M9.33	Undetermined	DC.M9
+DC.M9.34	Undetermined	DC.M9
+DC.M9.35	Undetermined	DC.M9
+DC.M9.36	Undetermined	DC.M9
+DC.M9.37	Undetermined	DC.M9
+DC.M9.38	Undetermined	DC.M9
+DC.M9.39	Undetermined	DC.M9
+DC.M9.40	Undetermined	DC.M9
+DC.M9.41	Undetermined	DC.M9
+DC.M9.42	Cell Cycle	DC.M9
+DC.M9.43	Undetermined	DC.M9
+DC.M9.44	Undetermined	DC.M9
+DC.M9.45	Undetermined	DC.M9
+DC.M9.46	Undetermined	DC.M9
+DC.M9.47	Undetermined	DC.M9
+DC.M9.48	Undetermined	DC.M9
+DC.M9.49	Undetermined	DC.M9
+DC.M9.50	Undetermined	DC.M9
+DC.M9.51	Undetermined	DC.M9
+DC.M9.52	Undetermined	DC.M9
