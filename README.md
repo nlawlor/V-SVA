@@ -6,6 +6,8 @@ Authors: *Donghyung Lee*, *Anthony Cheng*, *Nathan Lawlor*, *Mohan Bolisetty*, a
 
 App Maintainer: *Nathan Lawlor*
 
+App Location: https://nlawlor.shinyapps.io/IASVA_Shiny_08_13_2018/
+
 ***
 
 ### Introduction
