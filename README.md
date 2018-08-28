@@ -27,26 +27,26 @@ For an in depth guide of how to use this shiny app, please see the Word Document
 An example 10X Genomics single cell RNA-seq expression matrix obtained from [*Kang et al. 2017*](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5784859/) which contains a subset of 200 human peripheral blood mononuclear cells (PBMCs) 
 is provided at: https://github.com/nlawlor/iasva_shiny/blob/master/Data/test.exp.txt and can be used to test the app.
 
-When loaded in R, this matrix is formatted as:
+This matrix, when loaded into R:
 
 ```R, echo=FALSE, message=FALSE, eval=TRUE
 df <- read.delim("Data/test.exp.txt", header = T, check.names = F, stringsAsFactors = F, row.names = 1)
 df[1:4, 1:4]
 ```
 
-And looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/exp.matrix.png)
+Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/exp.matrix.png)
 
 2. The app secondly requires a matrix of sample metadata (rows as sample names, columns as traits). Like the expression matrix, this file may be formatted as a tab-delimited text file, .CSV file, or .Rds object.  
 
 An example metadata file for the above expression matrix can be found at: https://github.com/nlawlor/iasva_shiny/blob/master/Data/test.metadata.txt.
 
-When loaded in R, this matrix is formatted as:
+This matrix, when loaded into R:
 
 ```R, echo=FALSE, message=FALSE, eval=TRUE
 meta <- read.delim("Data/test.metadata.txt", header = T, check.names = F, stringsAsFactors = F, row.names = 1)
 meta[1:4, ]
 ```
-And looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/metadata.png)
+Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/metadata.png)
 
 **Please Note: The sample identifiers contained in the rows of the metadata matrix should be the same as the identifiers provided in the columns of the expression matrix**
 
@@ -80,4 +80,4 @@ And looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/
 
 ### Other Resources
 
-* The preprint manuscript describing this software can be found [here](https://www.biorxiv.org/content/early/2018/04/24/151217)
+* The preprint manuscript describing this software can be found on **bioRxiv** [here](https://www.biorxiv.org/content/early/2018/04/24/151217)
