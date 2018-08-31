@@ -158,7 +158,15 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                           mainPanel(
                             tabsetPanel(
                               tabPanel("Data/QC",
-                                       verbatimTextOutput("load_data")
+                                       verbatimTextOutput("load_data"),
+                                       br(),
+                                       # add two plots below this text output with qc stats
+                                       fluidRow(column(width = 6,
+                                                       plotOutput("Detect", height = 500, width = 500)
+                                        ), 
+                                        column(width = 6, plotOutput("Total_Genes", height = 500, width = 500)
+                                        )
+                                      )
                               ),
                               tabPanel("Surrogate Variables", downloadButton("Download_SVs", "Download All Surrogate Variables Plot"),
                                        downloadButton("Download_Correlation", "Download Correlation Plot"),
@@ -237,9 +245,29 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                                                                "Gene Ontology Cellular Component",
                                                                "Gene Ontology Molecular Function",
                                                                "KEGG", "Homo sapiens Immune Modules",
-                                                               "Homo sapiens PBMC Cell Specific Modules"),
+                                                               "Homo sapiens PBMC Cell Specific Modules",
+                                                               "Custom"),
                                                    multiple = FALSE,
                                                    selected = "Gene Ontology Biological Process"),
+                                       
+                                       # add conditional panel for custom gene lists
+                                       conditionalPanel(
+                                         condition = "input.Path_Type == 'Custom'",
+                                         fileInput(
+                                           inputId = "input_gene_mod",
+                                           "Upload custom gene and module file",
+                                           accept = ".txt"
+                                          )
+                                       ),
+                                       conditionalPanel(
+                                         condition = "input.Path_Type == 'Custom'",
+                                         fileInput(
+                                           inputId = "input_mod_names",
+                                           "Upload custom module identifier file",
+                                           accept = ".txt"
+                                         )
+                                       ),
+                                       # indicate species type
                                        selectInput(inputId = "Species_Type", label = "Species", 
                                                    choices = c("Homo sapiens", "Mus musculus",
                                                                "Rattus norvegicus"), multiple = FALSE,
@@ -253,6 +281,12 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                                        div(style="display: inline-block;vertical-align:left; width: 200px;",
                                        numericInput(inputId = "path_cutoff", label = "Adjusted P-value cutoff", 
                                                     min = 0, max = 1, value = 0.2, step = 0.05)
+                                       ),
+                                       br(),
+                                       # indicate max num of results to display
+                                       div(style="display: inline-block;vertical-align:left; width: 200px;",
+                                           numericInput(inputId = "path_viz_num", label = "Max # of Results to Visualize", 
+                                                        min = 0, value = 10, step = 1)
                                        ),
                                        br(),
                                        shiny::actionButton("Path_Analysis", "Run Enrichment Analysis", icon = icon("paper-plane"), class = "btn-primary"),
@@ -274,6 +308,7 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                                        shiny::actionButton("Dim_Analysis", "Run Dimension Reduction Analysis", icon = icon("paper-plane"), class = "btn-primary"),
                                        # this button can be used to just change plot coloring (after computing tsne/pca)
                                        shiny::actionButton("Update_Dim", "Update Plot Point Colors", icon = icon("refresh")),
+                                       br(),
                                        br(),
                                        fluidRow(
                                          column(width = 6, align = "left",
@@ -521,6 +556,32 @@ server <- shinyServer(function(input, output, session) {
                   "Sample number: ", ncol(dataTables$exp_norm), " \n",
                   "Number of SV's identified: ", ncol(dataTables$iasva.res$sv), sep = ""))
       
+    })
+    
+    # make a histogram of detected genes
+    output$Detect <- renderPlot({
+      valid_load()
+      valid_iasva()
+      # binarize data
+      bin_data <- dataTables$exp_norm
+      bin_data[bin_data < 1] <- 0
+      bin_data[bin_data >= 1] <- 1
+      num.exp <- apply(bin_data,2,sum)
+      summ <- summary(num.exp)
+      hist(num.exp, col = "dodgerblue", main="Features detected in each sample", 
+           ylab = "Samples (n)", xlab = "Number of features detected")
+      legend("topright", legend = paste(names(summ), round(summ, digits = 2), sep = " "), title = "Summary of Features Detected")
+    })
+    
+    # make a violin plot of total log2 scaled counts
+    output$Total_Genes <- renderPlot({
+      valid_load()
+      valid_iasva()
+      csum <- colSums(dataTables$exp_filt)
+      boxplot(csum, main = "Total features in each sample (total raw counts after preprocessing)",
+              ylab = "Total Raw Counts", xlab = "")
+      csum_summ <- summary(csum)
+      legend("topright", legend = paste(names(csum_summ), round(csum_summ, digits = 2), sep = " "), title = "Summary of Feature Totals")
     })
     
     # make a grid of all svs by default and no coloring
@@ -799,7 +860,7 @@ server <- shinyServer(function(input, output, session) {
       } else if (isolate(input$Path_Type) == "Homo sapiens PBMC Cell Specific Modules") {
         # load in necessary files
         gen_df <- read.delim("Data/Human.PBMC.Modules.and.genes.txt", header = F, check.names = F, stringsAsFactors = F)
-        mod_df <- read.delim("Data/Human.PBMC.Modules.term.names.txt", header = T, check.names = F, stringsAsFactors = F)
+        mod_df <- read.delim("Data/Human.PBMC.Modules.term.names.txt", header = F, check.names = F, stringsAsFactors = F)
         # enrichment analysis with gene symbols
         ego <- withProgress(expr = enricher(gene = dataTables$markers_formatted[,1],
                                             pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
@@ -807,10 +868,23 @@ server <- shinyServer(function(input, output, session) {
                                             minGSSize = 5, TERM2GENE = gen_df, TERM2NAME = mod_df),
                             message = "Performing Homo sapiens PBMC Cell Specific Modules Enrichment Analysis, please wait")
         
+      } else if (isolate(input$Path_Type) == "Custom") {
+        # load in gene and module file
+        gen_df <- read.delim(file = isolate(input$input_gene_mod$datapath),
+                                           header = F, check.names = F, stringsAsFactors = F)
+        mod_df <- read.delim(file = isolate(input$input_mod_names$datapath),
+                                                    header = F, check.names = F, stringsAsFactors = F)
+        # enrichment analysis with gene symbols
+        ego <- withProgress(expr = enricher(gene = dataTables$markers_formatted[,1],
+                                            pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
+                                            qvalueCutoff = isolate(input$path_cutoff),
+                                            minGSSize = 5, TERM2GENE = isolate(gen_df), TERM2NAME = isolate(mod_df)),
+                            message = "Performing Custom Enrichment Analysis, please wait")
+        
       }
       # save results to reactive value
       dataTables$enrich_res <- ego
-      dp <- clusterProfiler::dotplot(object = dataTables$enrich_res, showCategory = 10) + ggtitle(isolate(input$Path_Type))
+      dp <- clusterProfiler::dotplot(object = dataTables$enrich_res, showCategory = isolate(input$path_viz_num)) + ggtitle(isolate(input$Path_Type))
       withProgress(expr = plot(dp),
                    message = "Visualizing gene enrichment results, please wait")
     
@@ -1111,7 +1185,7 @@ server <- shinyServer(function(input, output, session) {
       valid_markers()
       valid_enrich()
       pdf(file)
-      dp <- clusterProfiler::dotplot(object = dataTables$enrich_res, showCategory = 10) + ggtitle(isolate(input$Path_Type)) + 
+      dp <- clusterProfiler::dotplot(object = dataTables$enrich_res, showCategory = isolate(input$path_viz_num)) + ggtitle(isolate(input$Path_Type)) + 
         theme(text = element_text(size=8), axis.text.y = element_text(size = 8))
       plot(dp)
       dev.off()
