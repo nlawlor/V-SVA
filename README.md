@@ -12,7 +12,11 @@ App Location: https://nlawlor.shinyapps.io/VIASVA/
 
 ### Introduction
 
-*IA-SVA* is a statistical framework to uncover hidden sources of variation even when these sources are correlated with the biological variable of interest. *IA-SVA* provides a flexible methodology to i) identify a hidden factor for unwanted heterogeneity while adjusting for all known factors; ii) test the significance of the putative hidden factor for explaining the variation in the data; and iii), if significant, use the estimated factor as an additional known factor in the next iteration to uncover further hidden factors.
+*IA-SVA* is a statistical framework to uncover hidden sources of variation even when these sources are correlated with the biological variable of interest. *IA-SVA* provides a flexible methodology to:
+
+1. Identify a hidden factor for unwanted heterogeneity while adjusting for all known factors
+2. Test the significance of the putative hidden factor for explaining the variation in the data
+3. If significant, use the estimated factor as an additional known factor in the next iteration to uncover further hidden factors.
 
 This shiny app reads a matrix of gene expression data (rows as genes, columns as samples) and a matrix of sample metadata (rows as samples, columns as different traits) and provides a suite of methods for feature extraction, gene set enrichment, and visualization of transcriptomic data.
 
@@ -56,7 +60,7 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ### Overview of features included in IA-SVA shiny
 
-* **Identify hidden sources of heterogeneity in transcriptomic data:**
+* **Identify hidden sources of variability in transcriptomic data:**
 
 ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/sv.plots.png)
 
