@@ -1,4 +1,4 @@
-# Iteratively Adjusted Surrogate Variable Analysis (*IA-SVA*)
+# Visual Iteratively Adjusted Surrogate Variable Analysis (*VIASVA*)
 
 ### A shiny application for interactive analysis and visualization of transcriptomic data
 
@@ -6,7 +6,7 @@ Authors: *Donghyung Lee*, *Anthony Cheng*, *Nathan Lawlor*, *Mohan Bolisetty*, a
 
 App Maintainer: *Nathan Lawlor*
 
-App Location: https://nlawlor.shinyapps.io/IASVA_Shiny_08_13_2018/
+App Location: https://nlawlor.shinyapps.io/VIASVA/
 
 ***
 
