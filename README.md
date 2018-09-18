@@ -72,7 +72,7 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/pathway.analysis.png)
 
-* **Clustering and interactive visualization of data:**
+* **Interactive visualization of data:**
 
 ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/tsne.gif)
 
