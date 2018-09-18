@@ -890,7 +890,7 @@ server <- shinyServer(function(input, output, session) {
       dataTables$iasva_vars <- iasva_vars
       par(mar = c(5, 5, 4, 2), xpd = TRUE)
       col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
-      corrplot(cor(iasva_vars), type = "upper", method = "color",
+      corrplot(abs(cor(iasva_vars)), type = "upper", method = "color",
                col = col(200), number.cex = 1,
                addCoef.col = "black",
                tl.col = "black", tl.srt = 90, diag = FALSE)
@@ -948,7 +948,7 @@ server <- shinyServer(function(input, output, session) {
         colnames(iasva_vars) <- c(paste("SV", c(as.numeric(input$All_SV_Num)), sep = ""),
                                   colnames(dataTables$meta_df))
         col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
-        corrplot(cor(iasva_vars), type = "upper", method = "color",
+        corrplot(abs(cor(iasva_vars)), type = "upper", method = "color",
                  col = col(200), number.cex = 1,
                  addCoef.col = "black",
                  tl.col = "black", tl.srt = 90, diag = FALSE)
@@ -1529,7 +1529,7 @@ server <- shinyServer(function(input, output, session) {
       colnames(iasva_vars) <- c(paste("SV", c(as.numeric(input$All_SV_Num)), sep = ""),
                                 colnames(dataTables$meta_df))
       col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
-      corrplot(cor(iasva_vars), type = "upper", method = "color",
+      corrplot(abs(cor(iasva_vars)), type = "upper", method = "color",
                col = col(200), number.cex = 1,
                addCoef.col = "black",
                tl.col = "black", tl.srt = 90, diag = FALSE)
@@ -1553,7 +1553,7 @@ server <- shinyServer(function(input, output, session) {
       # need to append column names to matrix
       colnames(iasva_vars) <- c(paste("SV", c(as.numeric(input$All_SV_Num)), sep = ""),
                                 colnames(dataTables$meta_df))
-      write.csv(cor(iasva_vars), file, row.names = FALSE)
+      write.csv(abs(cor(iasva_vars)), file, row.names = FALSE)
     }
   )
   
