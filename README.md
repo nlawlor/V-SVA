@@ -80,7 +80,7 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ### Availability
 
-* The app is currently hosted on **shinyapps.io** and available for use [here](https://nlawlor.shinyapps.io/IASVA_Shiny_08_13_2018/).
+* The app is currently hosted on **shinyapps.io** and available for use [here](https://nlawlor.shinyapps.io/VIASVA/).
 
 * **IA-SVA** is also available as an R-package that may be downloaded from **Bioconductor** [here](https://www.bioconductor.org/packages/devel/bioc/html/iasva.html), and the source code is available [here](https://github.com/UcarLab/iasva)
 
