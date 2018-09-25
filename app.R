@@ -32,6 +32,9 @@ library(htmlwidgets)
 # Define UI
 ################################################################################################################
 ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
+                        
+                        tags$head(includeScript("google-analytics.js")),
+                        
                         # Application title
                         titlePanel(div("VIASVA: A Shiny app for Visual Iteratively Adjusted Surrogate Variable Analysis", 
                                        img(height = 88, width = 217, 
