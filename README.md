@@ -1,6 +1,6 @@
 # Visual Iteratively Adjusted Surrogate Variable Analysis (*VIASVA*)
 
-### A shiny application for interactive analysis and visualization of transcriptomic data
+### A R Shiny application for detecting and annotating sources of variation in single cell RNA-seq data
 
 Authors: *Donghyung Lee*, *Anthony Cheng*, *Nathan Lawlor*, *Mohan Bolisetty*, and *Duygu Ucar*
 
