@@ -187,7 +187,7 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                                 selectInput(inputId = "known_factors", label = "Known Factors",
                                             choices = c(""), selected = NULL, multiple = TRUE)),
                             data.step = 9, data.intro = "Click in the box to select the known factor(s) from your metadata file you would like to adjust for. You may choose a single or multiple factors.
-                            If no metadata file was provided, two factors Genes_Detected (number of genes detected in each sample) and Total_Counts (total read counts in each sample) will be calculated for you.
+                            If no metadata file was provided, two factors Genes_Detected (number of genes detected in each sample) and Log_Total_Counts (log transformed total read counts in each sample) will be calculated for you.
                             Please note, at least one known factor must be selected prior to IA-SVA analysis."
                           ),
                           introBox(
@@ -553,7 +553,7 @@ server <- shinyServer(function(input, output, session) {
           legend("topright", legend = paste(names(summ), round(summ, digits = 2), sep = " "), title = "Summary of genes detected")
       
           # create a meta data object by default
-          dataTables$meta_df <- data.frame(Genes_Detected = num.exp, Total_Counts = colSums(dataTables$exp_norm))
+          dataTables$meta_df <- data.frame(Genes_Detected = num.exp, Log_Total_Counts = log(colSums(dataTables$exp_norm)+1))
           # change all variables to factors
           for (fac in 1:ncol(dataTables$meta_df)) {
             dataTables$meta_df[, fac] <- as.factor(dataTables$meta_df[, fac])
