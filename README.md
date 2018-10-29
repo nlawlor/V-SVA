@@ -1,18 +1,22 @@
-# Iteratively Adjusted Surrogate Variable Analysis (*IA-SVA*)
+# Visual Iteratively Adjusted Surrogate Variable Analysis (*VIASVA*)
 
-### A shiny application for interactive analysis and visualization of transcriptomic data
+### A R Shiny application for detecting and annotating sources of variation in single cell RNA-seq data
 
 Authors: *Donghyung Lee*, *Anthony Cheng*, *Nathan Lawlor*, *Mohan Bolisetty*, and *Duygu Ucar*
 
 App Maintainer: *Nathan Lawlor*
 
-App Location: https://nlawlor.shinyapps.io/IASVA_Shiny_08_13_2018/
+App Location: https://nlawlor.shinyapps.io/VIASVA/
 
 ***
 
 ### Introduction
 
-*IA-SVA* is a statistical framework to uncover hidden sources of variation even when these sources are correlated with the biological variable of interest. *IA-SVA* provides a flexible methodology to i) identify a hidden factor for unwanted heterogeneity while adjusting for all known factors; ii) test the significance of the putative hidden factor for explaining the variation in the data; and iii), if significant, use the estimated factor as an additional known factor in the next iteration to uncover further hidden factors.
+*IA-SVA* is a statistical framework to uncover hidden sources of variation even when these sources are correlated with the biological variable of interest. *IA-SVA* provides a flexible methodology to:
+
+1. Identify a hidden factor for unwanted heterogeneity while adjusting for all known factors
+2. Test the significance of the putative hidden factor for explaining the variation in the data
+3. If significant, use the estimated factor as an additional known factor in the next iteration to uncover further hidden factors.
 
 This shiny app reads a matrix of gene expression data (rows as genes, columns as samples) and a matrix of sample metadata (rows as samples, columns as different traits) and provides a suite of methods for feature extraction, gene set enrichment, and visualization of transcriptomic data.
 
@@ -56,7 +60,7 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ### Overview of features included in IA-SVA shiny
 
-* **Identify hidden sources of heterogeneity in transcriptomic data:**
+* **Identify hidden sources of variability in transcriptomic data:**
 
 ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/sv.plots.png)
 
@@ -68,7 +72,7 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/pathway.analysis.png)
 
-* **Clustering and interactive visualization of data:**
+* **Interactive visualization of data:**
 
 ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/tsne.gif)
 
@@ -76,7 +80,7 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ### Availability
 
-* The app is currently hosted on **shinyapps.io** and available for use [here](https://nlawlor.shinyapps.io/IASVA_Shiny_08_13_2018/).
+* The app is currently hosted on **shinyapps.io** and available for use [here](https://nlawlor.shinyapps.io/VIASVA/).
 
 * **IA-SVA** is also available as an R-package that may be downloaded from **Bioconductor** [here](https://www.bioconductor.org/packages/devel/bioc/html/iasva.html), and the source code is available [here](https://github.com/UcarLab/iasva)
 
