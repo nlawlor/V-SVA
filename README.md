@@ -1,6 +1,6 @@
-# Visual Iteratively Adjusted Surrogate Variable Analysis (*VIASVA*)
+# Visual Iteratively Adjusted Surrogate Variable Analysis (*VIA-SVA*)
 
-### A R Shiny application for detecting and annotating sources of variation in single cell RNA-seq data
+### An R Shiny application for detecting and annotating sources of variation in single cell RNA-seq data
 
 Authors: *Donghyung Lee*, *Anthony Cheng*, *Nathan Lawlor*, *Mohan Bolisetty*, and *Duygu Ucar*
 
@@ -12,13 +12,9 @@ App Location: https://nlawlor.shinyapps.io/VIASVA/
 
 ### Introduction
 
-*IA-SVA* is a statistical framework to uncover hidden sources of variation even when these sources are correlated with the biological variable of interest. *IA-SVA* provides a flexible methodology to:
+Single cell RNA-sequencing (scRNA-seq) is commonly used to define gene expression programs from individual cells. scRNA-seq expression data is highly spare and subject to substantial sources of experimental noise (“unwanted variation”) which can inhibit identification and analysis of unknown biological factors (“wanted variation”). Surrogate variable analysis (SVA) algorithms, such as *Iteratively Adjusted-Surrogate Variable Analysis (IA-SVA)*, have been developed to effectively estimate sources of hidden variation in expression data, however, annotating each factor and interpreting their underlying biology remains challenging. 
 
-1. Identify a hidden factor for unwanted heterogeneity while adjusting for all known factors
-2. Test the significance of the putative hidden factor for explaining the variation in the data
-3. If significant, use the estimated factor as an additional known factor in the next iteration to uncover further hidden factors.
-
-This shiny app reads a matrix of gene expression data (rows as genes, columns as samples) and a matrix of sample metadata (rows as samples, columns as different traits) and provides a suite of methods for feature extraction, gene set enrichment, and visualization of transcriptomic data.
+To facilitate the interpretation of detected hidden factors, we developed **Visual Iteratively Adjusted Surrogate Variable Analysis (VIA-SVA)**, an R Shiny application that provides a web-browser interface to *IA-SVA* for identification and annotation of hidden sources of variation in scRNA-seq data. This interactive framework includes tools for discovery of genes associated with detected sources of variation, gene annotation using publicly available databases and modules, and data visualization. 
 
 ***
 
@@ -86,4 +82,4 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ### Other Resources
 
-* The preprint manuscript describing this software can be found on **bioRxiv** [here](https://www.biorxiv.org/content/early/2018/04/24/151217)
+* The preprint manuscript describing the IA-SVA software can be found on **bioRxiv** [here](https://www.biorxiv.org/content/early/2018/04/24/151217)
