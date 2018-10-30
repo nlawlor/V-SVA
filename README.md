@@ -76,10 +76,11 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ### Availability
 
-* The app is currently hosted on **shinyapps.io** and available for use [here](https://nlawlor.shinyapps.io/VIASVA/).
+* **VIA-SVA** is currently hosted on **shinyapps.io** and available for use [here](https://nlawlor.shinyapps.io/VIASVA/).
 
-* **IA-SVA** is also available as an R-package that may be downloaded from **Bioconductor** [here](https://www.bioconductor.org/packages/devel/bioc/html/iasva.html), and the source code is available [here](https://github.com/UcarLab/iasva)
 
 ### Other Resources
+
+* **IA-SVA** is also available as an R-package that may be downloaded from **Bioconductor** [here](https://www.bioconductor.org/packages/devel/bioc/html/iasva.html), and the source code is available [here](https://github.com/UcarLab/iasva)
 
 * The preprint manuscript describing the IA-SVA software can be found on **bioRxiv** [here](https://www.biorxiv.org/content/early/2018/04/24/151217)
