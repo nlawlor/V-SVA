@@ -54,7 +54,7 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ***
 
-### Overview of features included in IA-SVA shiny
+### Overview of features included in V-SVA
 
 * **Identify hidden sources of variability in transcriptomic data:**
 
@@ -64,11 +64,11 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/marker.genes.png)
 
-* **Determine molecular pathways associated with the identified marker genes:**
+* **Use molecular pathways/genesets to annotated sources of variation:**
 
 ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/pathway.analysis.png)
 
-* **Interactive visualization of data:**
+* **Dimension reduction and interactive visualization of data:**
 
 ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/tsne.gif)
 
