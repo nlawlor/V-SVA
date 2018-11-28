@@ -6,7 +6,7 @@ Authors: *Nathan Lawlor*, *Eladio J. Marquez*, *Donghyung Lee*, and *Duygu Ucar*
 
 App Maintainer: *Nathan Lawlor*
 
-App Location: https://nlawlor.shinyapps.io/VIASVA/
+App Location:  https://nlawlor.shinyapps.io/VSVA/
 
 ***
 
@@ -76,7 +76,7 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 ### Availability
 
-* **V-SVA** is currently hosted on **shinyapps.io** and available for use [here](https://nlawlor.shinyapps.io/VIASVA/).
+* **V-SVA** is currently hosted on **shinyapps.io** and available for use [here]( https://nlawlor.shinyapps.io/VSVA/).
 
 
 ### Other Resources
