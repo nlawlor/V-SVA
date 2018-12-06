@@ -3,11 +3,14 @@ getOption("repos")
 library(shiny)
 library(rsconnect)
 library(iasva)
+library(sva)
+library(zinbwave)
 library(SummarizedExperiment)
 library(SingleCellExperiment)
 library(DelayedArray)
 library(irlba)
 library(Rtsne)
+library(stats)
 library(RColorBrewer)
 library(pheatmap)
 library(corrplot)
@@ -32,11 +35,11 @@ library(htmlwidgets)
 # Define UI
 ################################################################################################################
 ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
-                        
+                        # code to track app usage
                         tags$head(includeScript("google-analytics.js")),
                         
                         # Application title
-                        titlePanel(div("VIASVA: A Shiny app for Visual Iteratively Adjusted Surrogate Variable Analysis", 
+                        titlePanel(div("V-SVA: A Shiny app for Visual Surrogate Variable Analysis", 
                                        img(height = 88, width = 217, 
                                            src = "jax.logo.gif", 
                                            class = "pull-right"))),
@@ -115,7 +118,7 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                             Providing sample metadata is optional. If you do choose to provide metadata, the file should be formatted such that
                             sample names are in the rows and meta data variables are in columns. Step 1: The following input file formats are accepted: .Rds, tab-delimited text, .csv."),
                           
-                          # optional step to down-sample large datasets
+                          # optional step to remove poor quality cells
                           introBox(
                             h5("2a. Cell/Sample Filtering (Optional)"),
                             div(style="display: inline-block;vertical-align:top; width: 200px;",
@@ -136,6 +139,7 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                             If you choose yes, specify a minimum number of genes detected in each cell."
                           ),
                           
+                          # optional step to down-sample cells
                           introBox(
                             h5("2b. Down-sample Cells (Optional)"),
                             div(style="display: inline-block;vertical-align:top; width: 200px;",
@@ -155,6 +159,7 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                             computational time for downstream analyses. Note down-sampling may reduce power of analyses. Please select yes or no from the drop down menu to indicate if you would like to down-sample your data.
                             If you choose yes, specify a minimum number of samples to randomly down-sample to."
                           ),
+                          # choose gene filtering and normalization methods
                           introBox(
                             h5("2c. Gene Filtering and Normalization (Optional)"),
                             div(style="display: inline-block;vertical-align:top; width: 200px;",
@@ -188,40 +193,71 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                                             choices = c(""), selected = NULL, multiple = TRUE)),
                             data.step = 9, data.intro = "Click in the box to select the known factor(s) from your metadata file you would like to adjust for. You may choose a single or multiple factors.
                             If no metadata file was provided, two factors Genes_Detected (number of genes detected in each sample) and Log_Total_Counts (log transformed total read counts in each sample) will be calculated for you.
-                            Please note, at least one known factor must be selected prior to IA-SVA analysis."
+                            Please note, at least one known factor must be selected prior to SVA analysis."
                           ),
                           introBox(
-                            # after the user loads the data, update the select input options to reflect metadata table column names
-                            h4("4. IA-SVA Analysis"),
+                            # section for sva analysis
+                            h4("4. SVA Analysis"),
                             
-                            # either choose pct cutoff or num.sv parameter
+                            # first choose your SVA method
                             div(style="display: inline-block;vertical-align:top; width: 200px;",
-                                selectInput(inputId = "iasva_param", label = "Parameter Choice",
-                                            choices = c("Percentage Threshold", "Number of SVs"), 
-                                            selected = "Percentage Threshold")),
+                                selectInput(inputId = "sva_method", label = "SVA Method",
+                                            choices = c("IA-SVA", "SVA", "ZINB-WaVE"), 
+                                            selected = "IA-SVA")),
                             
-                            # conditional panel to choose parameter for IA-SVA analysis (percent threshold)
+                            
+                            # conditional panels for IA-SVA:
                             conditionalPanel(
-                              condition = "input.iasva_param == 'Percentage Threshold'",
+                              condition = "input.sva_method == 'IA-SVA'",
+                              # display the choices for pct cutoff or num.sv 
+                              # either choose pct cutoff or num.sv parameter
+                              div(style="display: inline-block;vertical-align:top; width: 200px;",
+                                  selectInput(inputId = "iasva_param", label = "Parameter Choice",
+                                              choices = c("Percentage Threshold", "Number of SVs"), 
+                                              selected = "Percentage Threshold")),
+                              
+                              # conditional panel to choose parameter for IA-SVA analysis (percent threshold)
+                              conditionalPanel(
+                                condition = "input.iasva_param == 'Percentage Threshold'",
+                                # options to customize parameters
+                                div(style="display: inline-block;vertical-align:top; width: 200px;",
+                                    numericInput(inputId = "pct_cutt", label = "% Threshold for SV retention", value = 1,
+                                                 min = 1, max = 99))
+                              ),
+                              
+                              # conditional panel to choose parameter for IA-SVA analysis (number of sv's)
+                              conditionalPanel(
+                                condition = "input.iasva_param == 'Number of SVs'",
+                                # options to customize parameters
+                                div(style="display: inline-block;vertical-align:top; width: 200px;",
+                                    numericInput(inputId = "num_of_svs", label = "Number of SVs to Estimate", value = 5,
+                                                 min = 1, max = 99))
+                              )
+                            ),
+                            
+                            # conditional panel for SVA method:
+                            conditionalPanel(
+                              condition = "input.sva_method == 'SVA'",
                               # options to customize parameters
                               div(style="display: inline-block;vertical-align:top; width: 200px;",
-                                  numericInput(inputId = "pct_cutt", label = "% Threshold for SV retention", value = 1,
+                                  numericInput(inputId = "sva_num", label = "Number of SVs to Estimate", value = 5,
                                                min = 1, max = 99))
                             ),
                             
-                            # conditional panel to choose parameter for IA-SVA analysis (number of sv's)
+                            # conditional panel for zinb-wave method:
                             conditionalPanel(
-                              condition = "input.iasva_param == 'Number of SVs'",
+                              condition = "input.sva_method == 'ZINB-WaVE'",
                               # options to customize parameters
                               div(style="display: inline-block;vertical-align:top; width: 200px;",
-                                  numericInput(inputId = "num_of_svs", label = "Number of SVs to Estimate", value = 5,
+                                  numericInput(inputId = "zinb_num", label = "Number of Latent Factors to Estimate", value = 5,
                                                min = 1, max = 99))
                             ),
                             
                             br(),
+                            # button to run sva analysis
                             shiny::actionButton("do", "Run Analysis", icon = icon("paper-plane"), class = "btn-primary"),
-                            data.step = 10, data.intro = "Click this button to run IA-SVA and identify unknown sources (surrogate variables) of variation within your data.
-                            Step 4: 'Percentage threshold for SV retention': IA-SVA computes the percentage of unmodeled variance explained by the putative hidden factor and compare it with the user-defined threshold. If the percentage is greater than the threshold, SV is retained.
+                            data.step = 10, data.intro = "Click this button to run SVA and identify unknown sources (surrogate variables) of variation within your data.
+                            Step 4: For IA-SVA method: 'Percentage threshold for SV retention': IA-SVA computes the percentage of unmodeled variance explained by the putative hidden factor and compare it with the user-defined threshold. If the percentage is greater than the threshold, SV is retained.
                             Alternatively, 'Number of SVs' forces IA-SVA to estimate a specified number of SVs."
                           ),
                           
@@ -243,16 +279,6 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                             tags$p(""),
                             tags$a(href = "https://www.jax.org/research-and-faculty/research-labs/the-ucar-lab",
                                  "Visit the Ucar Lab Here!", target = "_blank")),
-                          tags$div(class = "header", checked = NA,  
-                                   tags$i(""),
-                                   tags$p(""),
-                                   tags$a(href = "https://www.bioconductor.org/packages/devel/bioc/html/iasva.html",
-                                          "Check out the R package on Bioconductor", target = "_blank")),
-                          tags$div(class = "header", checked = NA,  
-                                   tags$i(""),
-                                   tags$p(""),
-                                   tags$a(href = "https://www.biorxiv.org/content/early/2018/04/24/151217",
-                                          "Check out the IASVA manuscript on bioRxiv", target = "_blank")),
                           data.step = 11, data.intro = "Please contact me or visit the Github page with any questions about the app. Also, checkout the resources below!")
                         ),
                         # main panel with multiple tabs: detect SVs, find marker genes, annotate genes, visualize data with tsne
@@ -366,7 +392,7 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                               tabPanel("Visualization with Marker Genes",
                                        # choose dimension reduction method
                                        selectInput(inputId = "Dim_Type", label = "Dimension Reduction", 
-                                                   choices = c("PCA", "t-SNE"), multiple = FALSE,
+                                                   choices = c("PCA", "t-SNE", "Classical Metric MDS"), multiple = FALSE,
                                                    selected = "PCA"),
                                        # choose variable to color points
                                        selectInput(inputId = "Dim_Color", label = "Color Points", 
@@ -389,7 +415,7 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                                        div(style="display: inline-block;vertical-align:left; width: 1000px;",
                                            plotlyOutput("Dim_Plot_Orig", height = 800, width = 1000)),
                                        br(),
-                                       # plot with ia-sva marker genes
+                                       # plot with sva marker genes
                                        div(style="display: inline-block;vertical-align:left; width: 250px;",
                                            downloadButton("download_dim_marker", "Download Marker Genes Plot")
                                        ),
@@ -402,17 +428,56 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                               
                               # gene enrichment analysis figure and table
                               tabPanel("Gene Enrichment Analysis",
-                                       # Select svs to choose for marker gene identification
-                                       selectInput(inputId = "Path_Type", label = "Enrichment Analysis Type", 
-                                                   choices = c("Gene Ontology Biological Process",
-                                                               "Gene Ontology Cellular Component",
-                                                               "Gene Ontology Molecular Function",
-                                                               "KEGG", "Homo sapiens Immune Modules",
-                                                               "Homo sapiens PBMC Cell Specific Modules",
-                                                               "Custom"),
-                                                   multiple = FALSE,
-                                                   selected = "Gene Ontology Biological Process"),
+                                       # indicate species type first
+                                       selectInput(inputId = "Species_Type", label = "Species", 
+                                                   choices = c("Homo sapiens", "Mus musculus",
+                                                               "Rattus norvegicus"), multiple = FALSE,
+                                                   selected = "Homo sapiens"),
                                        
+                                       # add conditional panel for available pathways for each species type
+                                       conditionalPanel(
+                                         condition = "input.Species_Type == 'Homo sapiens'",
+                                         # all pathway types should be available
+                                         selectInput(inputId = "Path_Type", label = "Enrichment Analysis Type", 
+                                                     choices = c("Gene Ontology Biological Process",
+                                                                 "Gene Ontology Cellular Component",
+                                                                 "Gene Ontology Molecular Function",
+                                                                 "KEGG", "Homo sapiens Immune Modules",
+                                                                 "Homo sapiens PBMC Cell Specific Modules",
+                                                                 "Homo sapiens Cell Cycle Genes",
+                                                                 "Custom"),
+                                                     multiple = FALSE,
+                                                     selected = "Gene Ontology Biological Process")
+                                       ),
+                                       
+                                       # condition for mice
+                                       conditionalPanel(
+                                         condition = "input.Species_Type == 'Mus musculus'",
+                                         # only some pathways types should be available
+                                         selectInput(inputId = "Path_Type", label = "Enrichment Analysis Type", 
+                                                     choices = c("Gene Ontology Biological Process",
+                                                                 "Gene Ontology Cellular Component",
+                                                                 "Gene Ontology Molecular Function",
+                                                                 "KEGG", "Mus musculus Cell Cycle Genes",
+                                                                 "Custom"),
+                                                     multiple = FALSE,
+                                                     selected = "Gene Ontology Biological Process")
+                                       ),
+                                       
+                                       # condition for rats
+                                       conditionalPanel(
+                                         condition = "input.Species_Type == 'Rattus norvegicus'",
+                                         # only some pathways types should be available
+                                         selectInput(inputId = "Path_Type", label = "Enrichment Analysis Type", 
+                                                     choices = c("Gene Ontology Biological Process",
+                                                                 "Gene Ontology Cellular Component",
+                                                                 "Gene Ontology Molecular Function",
+                                                                 "KEGG", "Rattus norvegicus Cell Cycle Genes",
+                                                                 "Custom"),
+                                                     multiple = FALSE,
+                                                     selected = "Gene Ontology Biological Process")
+                                       ),
+
                                        # add conditional panel for custom gene lists
                                        conditionalPanel(
                                          condition = "input.Path_Type == 'Custom'",
@@ -430,20 +495,24 @@ ui <- shinyUI(fluidPage(theme = shinytheme("cerulean"),
                                            accept = ".txt"
                                          )
                                        ),
-                                       # indicate species type
-                                       selectInput(inputId = "Species_Type", label = "Species", 
-                                                   choices = c("Homo sapiens", "Mus musculus",
-                                                               "Rattus norvegicus"), multiple = FALSE,
-                                                   selected = "Homo sapiens"),
+                                       
+                                       # specify p-value threshold
+                                       div(style="display: inline-block;vertical-align:left; width: 200px;",
+                                           numericInput(inputId = "pvalue_cutoff", label = "P-value cutoff",
+                                                      min = 0, max = 1, value = 0.05, step = 0.05)
+                                       ),
+                                       
+                                       # specify p-value adjustment method
                                        div(style="display: inline-block;vertical-align:left; width: 200px;",
                                            selectInput(inputId = "pvalue_correct", label = "P-value Adjustment",
                                                        choices = c("BH", "bonferroni", "none"),
                                                        selected = "BH")
                                        ),
+                                       
                                        # specify sig cutof
                                        div(style="display: inline-block;vertical-align:left; width: 200px;",
                                            numericInput(inputId = "path_cutoff", label = "Adjusted P-value cutoff", 
-                                                        min = 0, max = 1, value = 0.2, step = 0.05)
+                                                        min = 0, max = 1, value = 0.05, step = 0.05)
                                        ),
                                        br(),
                                        # indicate max num of results to display
@@ -625,10 +694,10 @@ server <- shinyServer(function(input, output, session) {
     shiny::validate(
       # adding an isolate() will make the error messages only appear/disappear when click run analysis button
       # before can run ia-sva need to have loaded data
-      need(isolate(dataTables$exp_norm != ""), "Error: Please load a gene/ADT file before running IA-SVA"),
-      need(isolate(dataTables$meta_df != ""), "Error: Please load a metadata file before running IA-SVA"),
+      need(isolate(dataTables$exp_norm != ""), "Error: Please load a gene/ADT file before running SVA"),
+      need(isolate(dataTables$meta_df != ""), "Error: Please load a metadata file before running SVA"),
       # make sure specify known variables
-      need(isolate(input$known_factors != ""), "Error: Please specify known factor(s) to adjust for before running IA-SVA"),
+      need(isolate(input$known_factors != ""), "Error: Please specify known factor(s) to adjust for before running SVA"),
       # maybe have option to specify no variables?
       need(isolate(input$pct_cutt >= 1), "Error: Percent threshold must be greater than or equal to 1"),
       need(isolate(input$num_of_svs >= 1), "Error: Number of SVs to estimate must be greater than or equal to 1"),
@@ -649,8 +718,8 @@ server <- shinyServer(function(input, output, session) {
   valid_downsample <- function() {
     shiny::validate(
       # if user chooses a downsampling number, make sure the number is greater than the input expression size
-      need(isolate(dataTables$exp_norm != ""), "Error: Please load a gene/ADT file before running IA-SVA"),
-      need(isolate(dataTables$meta_df != ""), "Error: Please load a metadata file before running IA-SVA"),
+      need(isolate(dataTables$exp_norm != ""), "Error: Please load a gene/ADT file before running SVA"),
+      need(isolate(dataTables$meta_df != ""), "Error: Please load a metadata file before running SVA"),
       need(ncol(dataTables$exp_norm) == nrow(dataTables$meta_df), "Error: Sample metadata file row number is not equal to Expression file column number!"),
       need(isolate(is.numeric(input$downsample_num)), "Error: Down-sampling value must be numeric"),
       need(isolate(ncol(dataTables$exp_norm) >= input$downsample_num),  "Error: Down-sampling value too large, must be less than input sample size")
@@ -687,6 +756,8 @@ server <- shinyServer(function(input, output, session) {
     shiny::validate(
       need(isolate(length(as.numeric(input$SV_marks)) >= 1), "Error: Please select 1 or more SVs to identify markers for"),
       need(isolate(!is.null(dataTables$markers)), "Error: No marker genes were identified... Please adjust r-squared and significance cutoffs and re-calculate before proceeding with enrichment analysis"),
+      need(isolate(input$pvalue_cutoff > 0), "Error: Enrichment analysis p-value cutoff must be greater than 0"),
+      need(isolate(input$pvalue_cutoff <= 1), "Error: Enrichment analysis p-value cutoff must be less than or equal to 1"),
       need(isolate(input$path_cutoff > 0), "Error: Enrichment analysis adjusted p-value cutoff must be greater than 0"),
       need(isolate(input$path_cutoff <= 1), "Error: Enrichment analysis adjusted p-value cutoff must be less than or equal to 1")
     )
@@ -817,19 +888,56 @@ server <- shinyServer(function(input, output, session) {
         mod <- model.matrix(~varf1, data = dataTables$meta_df)
       }
       
-      # IA-SVA analysis
+      # create summarized experiment for expression matrix to later use for marker gene identification
       summ_exp <- SummarizedExperiment(assays = as.matrix(dataTables$exp_norm))
       dataTables$summ_exp <- summ_exp
       
-      # depending on which ia-sva parameters were chosen, evaluate
-      if (isolate(input$iasva_param == "Percentage Threshold")) {
-        dataTables$iasva.res <- withProgress(expr = fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE,
-                                                               pct.cutoff = isolate(input$pct_cutt), num.sv = NULL),
-                                             message = "IA-SVA analysis in progress, please wait")
-      } else if (isolate(input$iasva_param == "Number of SVs")) {
-        dataTables$iasva.res <- withProgress(expr = fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE,
-                                                               pct.cutoff = isolate(input$pct_cutt), num.sv = isolate(input$num_of_svs)),
-                                             message = "IA-SVA analysis in progress, please wait")
+      # SVA analyses here
+      # if user chose IA-SVA, then perform following
+      if (isolate(input$sva_method == "IA-SVA")) {
+        # depending on which ia-sva parameters were chosen, evaluate
+        if (isolate(input$iasva_param == "Percentage Threshold")) {
+          dataTables$iasva.res <- withProgress(expr = fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE,
+                                                                 pct.cutoff = isolate(input$pct_cutt), num.sv = NULL),
+                                               message = "IA-SVA analysis in progress, please wait")
+        } else if (isolate(input$iasva_param == "Number of SVs")) {
+          dataTables$iasva.res <- withProgress(expr = fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE,
+                                                                 pct.cutoff = isolate(input$pct_cutt), num.sv = isolate(input$num_of_svs)),
+                                               message = "IA-SVA analysis in progress, please wait")
+        } 
+        # else if choose SVA method
+      } else if (isolate(input$sva_method == "SVA")) {
+        # check parameters are correct
+        shiny::validate(
+          need(isolate(input$sva_num >= 1), "Error: Number of SVs to estimate must be greater than or equal to 1"),
+          need(isolate(is.numeric(input$sva_num)), "Error: Number of SVs to estimate must be a numeric value")
+        )
+        
+        # perform sva analysis with specified svs
+        sva.res <- withProgress(expr = svaseq(dataTables$exp_norm, mod = mod, mod0 = mod[,1], n.sv = isolate(input$sva_num)),
+                                             message = "SVA analysis in progress, please wait")
+        colnames(sva.res$sv) <- paste("SV", 1:ncol(sva.res$sv), sep = "")
+        dataTables$iasva.res <- sva.res
+        
+        # else if choose zinb-wave method
+      } else if (isolate(input$sva_method == "ZINB-WaVE")) {
+        # check that paramters are correct
+        # check parameters are correct
+        shiny::validate(
+          need(isolate(input$zinb_num >= 1), "Error: Number of latent factors to estimate must be greater than or equal to 1"),
+          need(isolate(is.numeric(input$zinb_num)), "Error: Number of latent factors to estimate must be a numeric value")
+        )
+        
+        # perform analysis with specified latent factors
+        zinb.matrix <- dataTables$exp_norm
+        # coerce to integer
+        mode(zinb.matrix) <- "integer"
+        zinb.res <- withProgress(expr = zinbFit(Y = zinb.matrix, X = mod[,-1, drop = F], K = isolate(input$zinb_num)),
+                                             message = "ZINB-WaVE analysis in progress, please wait")
+        # extract factors
+        zinb.fac <- getW(zinb.res)
+        colnames(zinb.fac) <- paste("SV", 1:ncol(zinb.fac), sep = "")
+        dataTables$iasva.res <- list(sv = zinb.fac)
       }
       
       # if no SV's are calculated inform user
@@ -862,8 +970,8 @@ server <- shinyServer(function(input, output, session) {
                         choices = colnames(iasva.sv), selected = "SV1")
       
       # output messages
-      print(paste("IA-SVA analysis finished! \n",
-                  "Number of SV's identified: ", isolate(ncol(dataTables$iasva.res$sv)), sep = ""))
+      print(paste(isolate(input$sva_method), " analysis finished! \n",
+                  "Number of SV's/Factors identified: ", isolate(ncol(dataTables$iasva.res$sv)), sep = ""))
       
     })
     
@@ -906,7 +1014,10 @@ server <- shinyServer(function(input, output, session) {
       iasva.sv <- as.data.frame(dataTables$iasva.res$sv)
       rownames(iasva.sv) <- colnames(dataTables$exp_norm)
       plot_ly(iasva.sv, x = ~SV1, y = ~SV2, type = "scatter",
-              mode = "markers", text = paste("Cell ID: ", rownames(iasva.sv), sep = ""))
+              mode = "markers", text = paste("Cell ID: ", rownames(iasva.sv), sep = ""),
+              marker = list(
+                opacity = 0.5
+              ))
     })
     
   })
@@ -979,7 +1090,10 @@ server <- shinyServer(function(input, output, session) {
           
           plot_ly(as.data.frame(dataTables$iasva.res$sv), x = dataTables$iasva.res$sv[,id_svx],
                   y = dataTables$iasva.res$sv[,id_svy], type = "scatter",
-                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$meta_df), sep = "")) %>%
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$meta_df), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>%
             layout(xaxis = x_ax, yaxis = y_ax)
         } else {
           # grouping color variable
@@ -999,7 +1113,10 @@ server <- shinyServer(function(input, output, session) {
           plot_ly(as.data.frame(dataTables$iasva.res$sv), x = dataTables$iasva.res$sv[,id_svx],
                   y = dataTables$iasva.res$sv[,id_svy], type = "scatter",
                   mode = "markers", text = paste("Cell ID: ", rownames(dataTables$meta_df), sep = ""),
-                  color = ~fac_int) %>%
+                  color = ~fac_int,
+                  marker = list(
+                    opacity = 0.5
+                  )) %>%
             layout(xaxis = x_ax, yaxis = y_ax)
         }
       })
@@ -1143,7 +1260,7 @@ server <- shinyServer(function(input, output, session) {
                                             OrgDb = dataTables$species,
                                             keyType = "ENTREZID",
                                             ont = "BP",
-                                            pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
+                                            pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
                                             qvalueCutoff = isolate(input$path_cutoff),
                                             minGSSize = 5,
                                             readable = TRUE),
@@ -1153,7 +1270,7 @@ server <- shinyServer(function(input, output, session) {
                                             OrgDb = dataTables$species,
                                             keyType = "ENTREZID",
                                             ont = "CC",
-                                            pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
+                                            pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
                                             qvalueCutoff = isolate(input$path_cutoff),
                                             minGSSize = 5,
                                             readable = TRUE),
@@ -1163,7 +1280,7 @@ server <- shinyServer(function(input, output, session) {
                                             OrgDb = dataTables$species,
                                             keyType = "ENTREZID",
                                             ont = "MF",
-                                            pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
+                                            pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
                                             qvalueCutoff = isolate(input$path_cutoff),
                                             minGSSize = 5,
                                             readable = TRUE),
@@ -1172,7 +1289,7 @@ server <- shinyServer(function(input, output, session) {
         ego <- withProgress(expr = enrichKEGG(gene = dataTables$gene.df$ENTREZID,
                                               organism = dataTables$species_kegg,
                                               keyType = "kegg",
-                                              pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
+                                              pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
                                               qvalueCutoff = isolate(input$path_cutoff),
                                               minGSSize = 5),
                             message = "Performing KEGG Enrichment Analysis, please wait")
@@ -1182,7 +1299,7 @@ server <- shinyServer(function(input, output, session) {
         mod_df <- read.delim("Data/Tmod.immune.module.term.and.name.txt", header = T, check.names = F, stringsAsFactors = F)
         # enrichment analysis with gene symbols
         ego <- withProgress(expr = enricher(gene = dataTables$markers_formatted[,1],
-                                              pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
+                                              pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
                                               qvalueCutoff = isolate(input$path_cutoff),
                                               minGSSize = 5, TERM2GENE = gen_df, TERM2NAME = mod_df),
                             message = "Performing Homo sapiens Immune Modules Enrichment Analysis, please wait")
@@ -1192,10 +1309,45 @@ server <- shinyServer(function(input, output, session) {
         mod_df <- read.delim("Data/Human.PBMC.Modules.term.names.txt", header = F, check.names = F, stringsAsFactors = F)
         # enrichment analysis with gene symbols
         ego <- withProgress(expr = enricher(gene = dataTables$markers_formatted[,1],
-                                            pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
+                                            pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
                                             qvalueCutoff = isolate(input$path_cutoff),
                                             minGSSize = 5, TERM2GENE = gen_df, TERM2NAME = mod_df),
                             message = "Performing Homo sapiens PBMC Cell Specific Modules Enrichment Analysis, please wait")
+      } else if (isolate(input$Path_Type) == "Homo sapiens Cell Cycle Genes") {
+        # load in necessary files
+        gen_df <- read.delim("Data/Human.cell.cycle.module.and.genes.txt", header = F, check.names = F, stringsAsFactors = F)
+        mod_df <- read.delim("Data/Cell.cycle.module.names.txt", header = F, check.names = F, stringsAsFactors = F)
+        # enrichment analysis with gene symbols
+        ego <- withProgress(expr = enricher(gene = dataTables$markers_formatted[,1],
+                                            pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
+                                            qvalueCutoff = isolate(input$path_cutoff),
+                                            minGSSize = 5, TERM2GENE = gen_df, TERM2NAME = mod_df,
+                                            universe = rownames(dataTables$exp_norm)),
+                            message = "Performing Homo sapiens Cell Cycle Gene Enrichment Analysis, please wait")
+        
+      } else if (isolate(input$Path_Type) == "Mus musculus Cell Cycle Genes") {
+        # load in necessary files
+        gen_df <- read.delim("Data/Mouse.cell.cycle.module.and.genes.txt", header = F, check.names = F, stringsAsFactors = F)
+        mod_df <- read.delim("Data/Cell.cycle.module.names.txt", header = F, check.names = F, stringsAsFactors = F)
+        # enrichment analysis with gene symbols
+        ego <- withProgress(expr = enricher(gene = dataTables$markers_formatted[,1],
+                                            pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
+                                            qvalueCutoff = isolate(input$path_cutoff),
+                                            minGSSize = 5, TERM2GENE = gen_df, TERM2NAME = mod_df,
+                                            universe = rownames(dataTables$exp_norm)),
+                            message = "Performing Mus musculus Cell Cycle Gene Enrichment Analysis, please wait")
+        
+      } else if (isolate(input$Path_Type) == "Rattus norvegicus Cell Cycle Genes") {
+        # load in necessary files
+        gen_df <- read.delim("Data/Rat.cell.cycle.module.and.genes.txt", header = F, check.names = F, stringsAsFactors = F)
+        mod_df <- read.delim("Data/Cell.cycle.module.names.txt", header = F, check.names = F, stringsAsFactors = F)
+        # enrichment analysis with gene symbols
+        ego <- withProgress(expr = enricher(gene = dataTables$markers_formatted[,1],
+                                            pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
+                                            qvalueCutoff = isolate(input$path_cutoff),
+                                            minGSSize = 5, TERM2GENE = gen_df, TERM2NAME = mod_df,
+                                            universe = rownames(dataTables$exp_norm)),
+                            message = "Performing Rattus norvegicus Cell Cycle Gene Enrichment Analysis, please wait")
         
       } else if (isolate(input$Path_Type) == "Custom") {
         # load in gene and module file
@@ -1205,14 +1357,20 @@ server <- shinyServer(function(input, output, session) {
                                                     header = F, check.names = F, stringsAsFactors = F)
         # enrichment analysis with gene symbols
         ego <- withProgress(expr = enricher(gene = dataTables$markers_formatted[,1],
-                                            pvalueCutoff = 0.05, pAdjustMethod = isolate(input$pvalue_correct),
+                                            pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
                                             qvalueCutoff = isolate(input$path_cutoff),
-                                            minGSSize = 5, TERM2GENE = isolate(gen_df), TERM2NAME = isolate(mod_df)),
+                                            minGSSize = 5, TERM2GENE = isolate(gen_df), TERM2NAME = isolate(mod_df),
+                                            universe = rownames(dataTables$exp_norm)),
                             message = "Performing Custom Enrichment Analysis, please wait")
         
       }
       # save results to reactive value
       dataTables$enrich_res <- ego
+      # check if any enrichment results
+      shiny::validate(
+        need(nrow(ego) > 0, "Error: No enriched terms were found. Please adjust parameters and try again.")
+      )
+      
       dp <- clusterProfiler::dotplot(object = dataTables$enrich_res, showCategory = isolate(input$path_viz_num)) + ggtitle(isolate(input$Path_Type))
       withProgress(expr = plot(dp),
                    message = "Visualizing gene enrichment results, please wait")
@@ -1238,7 +1396,7 @@ server <- shinyServer(function(input, output, session) {
         # original matrix plot
         # transpose matrix
         set.seed(1)
-        trans_orig <- t(dataTables$exp_norm)
+        trans_orig <- t(log(dataTables$exp_norm+1))
         # remove any zeros
         dataTables$pre_dim_orig <- trans_orig[, apply(trans_orig, 2, var, na.rm = TRUE) != 0]
         withProgress(expr = dim_orig <- prcomp(x = dataTables$pre_dim_orig, center = TRUE, scale. = TRUE),
@@ -1252,7 +1410,7 @@ server <- shinyServer(function(input, output, session) {
         # remove any zeros
         dataTables$pre_dim_mark <- trans_mark[, apply(trans_mark, 2, var, na.rm = TRUE) != 0]
         withProgress(expr = dim_mark <- prcomp(x = dataTables$pre_dim_mark, center = TRUE, scale. = TRUE),
-                     message = "Performing PCA reduction of IASVA selected genes, please wait")
+                     message = "Performing PCA reduction of selected marker genes, please wait")
         dim_mark_mat <- dim_mark$x
         rownames(dim_mark_mat) <- colnames(dataTables$exp_norm)
         dataTables$dim_mark <- as.data.frame(dim_mark_mat)
@@ -1261,14 +1419,19 @@ server <- shinyServer(function(input, output, session) {
         # if no coloring
         if (isolate(input$Dim_Color == "No Color")) {
           plot_ly(dataTables$dim_orig, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
-                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = "")) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
         } else {
           # factor for coloring
           id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
           fac_int <- as.factor(dataTables$meta_df[, id_fac])
           plot_ly(dataTables$dim_orig, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
                   mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
-                  color = ~fac_int) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = "")) 
+                  color = ~fac_int, marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = "")) 
         }
       })
       
@@ -1279,13 +1442,19 @@ server <- shinyServer(function(input, output, session) {
         
         if (isolate(input$Dim_Color == "No Color")) {
           plot_ly(dataTables$dim_mark, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
-                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = "")) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
         } else {
           id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
           fac_int <- as.factor(dataTables$meta_df[, id_fac])
           plot_ly(dataTables$dim_mark, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
                   mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
-                  color = ~fac_int) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
+                  color = ~fac_int, 
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
         }
       })
       
@@ -1297,7 +1466,7 @@ server <- shinyServer(function(input, output, session) {
         valid_dim()
         # original matrix plot
         set.seed(1)
-        trans_orig <- t(dataTables$exp_norm)
+        trans_orig <- t(log(dataTables$exp_norm+1))
         # remove any zeros
         dataTables$pre_dim_orig <- trans_orig[, apply(trans_orig, 2, var, na.rm = TRUE) != 0]
         withProgress(expr = dim_orig <- Rtsne(X = dataTables$pre_dim_orig, dims = 3),
@@ -1312,7 +1481,7 @@ server <- shinyServer(function(input, output, session) {
         # remove any zeros
         dataTables$pre_dim_mark <- trans_mark[, apply(trans_mark, 2, var, na.rm = TRUE) != 0]
         withProgress(expr = dim_mark <- Rtsne(X = dataTables$pre_dim_mark, dims = 3),
-                     message = "Performing t-SNE reduction of IASVA selected genes, please wait")
+                     message = "Performing t-SNE reduction of selected marker genes, please wait")
         dim_mark_mat <- dim_mark$Y
         rownames(dim_mark_mat) <- colnames(dataTables$exp_norm)
         colnames(dim_mark_mat) <- c("tSNE1", "tSNE2", "tSNE3")
@@ -1325,14 +1494,19 @@ server <- shinyServer(function(input, output, session) {
         # if no coloring 
         if (isolate(input$Dim_Color == "No Color")) {
           plot_ly(dataTables$dim_orig, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
-                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = "")) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))  
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))  
         } else {
           # factor for coloring
           id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
           fac_int <- as.factor(dataTables$meta_df[, id_fac])
           plot_ly(dataTables$dim_orig, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
                   mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
-                  color = ~fac_int) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = "")) 
+                  color = ~fac_int, marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = "")) 
         }
       })
       
@@ -1343,13 +1517,91 @@ server <- shinyServer(function(input, output, session) {
         
         if (isolate(input$Dim_Color == "No Color")) {
           plot_ly(dataTables$dim_mark, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
-                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = "")) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))  
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))  
         } else {
           id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
           fac_int <- as.factor(dataTables$meta_df[, id_fac])
           plot_ly(dataTables$dim_mark, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
                   mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
-                  color = ~fac_int) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = "")) 
+                  color = ~fac_int, marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = "")) 
+        }
+      })
+    } else if (isolate(input$Dim_Type) == "Classical Metric MDS") {
+      # make interactive plots
+      output$Dim_Plot_Orig <- renderPlotly({
+        valid_load()
+        valid_iasva()
+        valid_dim()
+        # original matrix plot
+        set.seed(1)
+        trans_orig <- t(log(dataTables$exp_norm+1))
+        # remove any zeros
+        dataTables$pre_dim_orig <- trans_orig[, apply(trans_orig, 2, var, na.rm = TRUE) != 0]
+        withProgress(expr = dim_orig <- cmdscale(d = dist(dataTables$pre_dim_orig), k = 3),
+                     message = "Performing classical multidimensional scaling using all genes, please wait")
+        dim_orig_mat <- dim_orig
+        rownames(dim_orig_mat) <- colnames(dataTables$exp_norm)
+        colnames(dim_orig_mat) <- c("MDS1", "MDS2", "MDS3")
+        
+        # marker matrix plot
+        # transpose matrix
+        trans_mark <- t(dataTables$exp_norm[dataTables$markers_formatted[,1],])
+        # remove any zeros
+        dataTables$pre_dim_mark <- trans_mark[, apply(trans_mark, 2, var, na.rm = TRUE) != 0]
+        withProgress(expr = dim_mark <- cmdscale(d = dist(dataTables$pre_dim_mark), k = 3),
+                     message = "Performing classical multidimensional scaling using selected marker genes, please wait")
+        dim_mark_mat <- dim_mark
+        rownames(dim_mark_mat) <- colnames(dataTables$exp_norm)
+        colnames(dim_mark_mat) <- c("MDS1", "MDS2", "MDS3")
+        # remove any zeros
+        dim_mark_mat <- dim_mark_mat[, apply(dim_mark_mat, 2, var, na.rm = TRUE) != 0]
+        
+        dataTables$dim_mark <- as.data.frame(dim_mark_mat)
+        dataTables$dim_orig <- as.data.frame(dim_orig_mat)
+        
+        # if no coloring 
+        if (isolate(input$Dim_Color == "No Color")) {
+          plot_ly(dataTables$dim_orig, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))  
+        } else {
+          # factor for coloring
+          id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
+          fac_int <- as.factor(dataTables$meta_df[, id_fac])
+          plot_ly(dataTables$dim_orig, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                  color = ~fac_int, marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = "")) 
+        }
+      })
+      
+      output$Dim_Plot_Markers <- renderPlotly({
+        valid_load()
+        valid_iasva()
+        valid_dim()
+        
+        if (isolate(input$Dim_Color == "No Color")) {
+          plot_ly(dataTables$dim_mark, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))  
+        } else {
+          id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
+          fac_int <- as.factor(dataTables$meta_df[, id_fac])
+          plot_ly(dataTables$dim_mark, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                  color = ~fac_int, marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = "")) 
         }
       })
     }
@@ -1367,14 +1619,20 @@ server <- shinyServer(function(input, output, session) {
         # if no color
         if (isolate(input$Dim_Color == "No Color")) {
           plot_ly(dataTables$dim_orig, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
-                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = "")) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
         } else {
           # factor for coloring
           id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
           fac_int <- as.factor(dataTables$meta_df[, id_fac])
           plot_ly(dataTables$dim_orig, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
                   mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
-                  color = ~fac_int) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+                  color = ~fac_int,
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
         }
       })
       
@@ -1386,13 +1644,18 @@ server <- shinyServer(function(input, output, session) {
         # if no color
         if (isolate(input$Dim_Color == "No Color")) {
           plot_ly(dataTables$dim_mark, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
-                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = "")) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
         } else {
           id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
           fac_int <- as.factor(dataTables$meta_df[, id_fac])
           plot_ly(dataTables$dim_mark, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
                   mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
-                  color = ~fac_int) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = "")) 
+                  color = ~fac_int, marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = "")) 
         }
       })
     } else if (isolate(input$Dim_Type) == "t-SNE") {
@@ -1405,14 +1668,19 @@ server <- shinyServer(function(input, output, session) {
         # if no coloring
         if (isolate(input$Dim_Color == "No Color")) {
           plot_ly(dataTables$dim_orig, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
-                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = "")) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
         } else {
           # factor for coloring
           id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
           fac_int <- as.factor(dataTables$meta_df[, id_fac])
           plot_ly(dataTables$dim_orig, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
                   mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
-                  color = ~fac_int) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = "")) 
+                  color = ~fac_int, marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = "")) 
         }
       })
       
@@ -1423,14 +1691,68 @@ server <- shinyServer(function(input, output, session) {
         
         if (isolate(input$Dim_Color == "No Color")) {
           plot_ly(dataTables$dim_mark, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
-                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = "")) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
         } else {
           # factor for coloring
           id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
           fac_int <- as.factor(dataTables$meta_df[, id_fac])
           plot_ly(dataTables$dim_mark, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
                   mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
-                  color = ~fac_int) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = "")) 
+                  color = ~fac_int, marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = "")) 
+        }
+      })
+    } else if (isolate(input$Dim_Type) == "Classical Metric MDS") {
+      # make interactive plots
+      output$Dim_Plot_Orig <- renderPlotly({
+        valid_load()
+        valid_iasva()
+        valid_dim()
+        
+        # if no color
+        if (isolate(input$Dim_Color == "No Color")) {
+          plot_ly(dataTables$dim_orig, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+        } else {
+          # factor for coloring
+          id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
+          fac_int <- as.factor(dataTables$meta_df[, id_fac])
+          plot_ly(dataTables$dim_orig, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                  color = ~fac_int,
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+        }
+      })
+      
+      output$Dim_Plot_Markers <- renderPlotly({
+        valid_load()
+        valid_iasva()
+        valid_dim()
+        
+        # if no color
+        if (isolate(input$Dim_Color == "No Color")) {
+          plot_ly(dataTables$dim_mark, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                  marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
+        } else {
+          id_fac <- which(colnames(dataTables$meta_df) == isolate(input$Dim_Color))
+          fac_int <- as.factor(dataTables$meta_df[, id_fac])
+          plot_ly(dataTables$dim_mark, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                  mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                  color = ~fac_int, marker = list(
+                    opacity = 0.5
+                  )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = "")) 
         }
       })
     }
@@ -1455,7 +1777,7 @@ server <- shinyServer(function(input, output, session) {
   
   # download qc histogram
   output$Download_QC <- downloadHandler(
-    filename = function() { paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted.QC.histogram.pdf", sep=".") },
+    filename = function() { paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted.QC.histogram.pdf", sep=".") },
     content = function(file) {
       pdf(file)
       shiny::validate(
@@ -1472,7 +1794,7 @@ server <- shinyServer(function(input, output, session) {
   
   # download figure panel
   output$Download_SVs <- downloadHandler(
-    filename = function() { paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted.SV.plot.pdf", sep=".") },
+    filename = function() { paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted.SV.plot.pdf", sep=".") },
     content = function(file) {
       pdf(file)
       par(mar = c(5, 5, 4, 2), xpd = TRUE)
@@ -1497,7 +1819,7 @@ server <- shinyServer(function(input, output, session) {
   # download SV coordinates table for samples
   output$Download_SVs_Table <- downloadHandler(
     filename = function() {
-      paste("IASVA", input$norm_method, "normalized", input$known_factors, "SV.coordinates.csv", sep=".")
+      paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "SV.coordinates.csv", sep=".")
     },
     content = function(file) {
       valid_load()
@@ -1516,7 +1838,7 @@ server <- shinyServer(function(input, output, session) {
   
   # download correlation plot
   output$Download_Correlation <- downloadHandler(
-    filename = function() { paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted.correlation.plot.pdf", sep=".") },
+    filename = function() { paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted.correlation.plot.pdf", sep=".") },
     content = function(file) {
       pdf(file)
       valid_load()
@@ -1542,7 +1864,7 @@ server <- shinyServer(function(input, output, session) {
   # download correlation table values
   output$Download_Correlation_Table <- downloadHandler(
     filename = function() {
-      paste("IASVA", input$norm_method, "normalized", input$known_factors, "correlation.values.csv", sep=".")
+      paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "correlation.values.csv", sep=".")
     },
     content = function(file) {
       valid_load()
@@ -1562,7 +1884,7 @@ server <- shinyServer(function(input, output, session) {
   
   # download pairwise plots
   output$Download_Pairwise <- downloadHandler(
-    filename = function() { paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted.pair.svs.html", sep=".") },
+    filename = function() { paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted.pair.svs.html", sep=".") },
     content = function(file) {
       valid_load()
       valid_iasva()
@@ -1581,7 +1903,10 @@ server <- shinyServer(function(input, output, session) {
         
         py <- plot_ly(as.data.frame(dataTables$iasva.res$sv), x = dataTables$iasva.res$sv[,id_svx],
                 y = dataTables$iasva.res$sv[,id_svy], type = "scatter",
-                mode = "markers", text = paste("Cell ID: ", rownames(dataTables$meta_df), sep = "")) %>%
+                mode = "markers", text = paste("Cell ID: ", rownames(dataTables$meta_df), sep = ""),
+                marker = list(
+                  opacity = 0.5
+                )) %>%
           layout(xaxis = x_ax, yaxis = y_ax)
       } else {
         # grouping color variable
@@ -1601,7 +1926,10 @@ server <- shinyServer(function(input, output, session) {
         py <- plot_ly(as.data.frame(dataTables$iasva.res$sv), x = dataTables$iasva.res$sv[,id_svx],
                 y = dataTables$iasva.res$sv[,id_svy], type = "scatter",
                 mode = "markers", text = paste("Cell ID: ", rownames(dataTables$meta_df), sep = ""),
-                color = ~fac_int) %>%
+                color = ~fac_int,
+                marker = list(
+                  opacity = 0.5
+                )) %>%
           layout(xaxis = x_ax, yaxis = y_ax)
       }
       htmlwidgets::saveWidget(py, file)
@@ -1609,7 +1937,7 @@ server <- shinyServer(function(input, output, session) {
   
   # download heatmap of markers
   output$Download_Heatmap <- downloadHandler(
-    filename = function() { paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted.heatmap.plot.pdf", sep=".") },
+    filename = function() { paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted.heatmap.plot.pdf", sep=".") },
     content = function(file) {
       valid_load()
       valid_iasva()
@@ -1644,7 +1972,7 @@ server <- shinyServer(function(input, output, session) {
   # download marker genes in table
   output$Download_Markers <- downloadHandler(
     filename = function() {
-      paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted.marker.genes.csv", sep=".")
+      paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted.marker.genes.csv", sep=".")
     },
     content = function(file) {
       valid_load()
@@ -1657,7 +1985,7 @@ server <- shinyServer(function(input, output, session) {
   # download enrichment analysis plot
   output$Download_path_plot <- downloadHandler(
     filename = function() { 
-      paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted.enrichment.plot.pdf", sep = ".")
+      paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted.enrichment.plot.pdf", sep = ".")
     },
     content = function(file) {
       valid_load()
@@ -1675,7 +2003,7 @@ server <- shinyServer(function(input, output, session) {
   # download enrichment analysis table
   output$Download_path_table <- downloadHandler(
     filename = function() {
-      paste("IASVA", input$norm_method, "normalized", input$known_factors, 
+      paste(input$sva_method, input$norm_method, "normalized", input$known_factors, 
             "adjusted.enrichment.results.csv", sep=".")
     },
     content = function(file) {
@@ -1689,7 +2017,7 @@ server <- shinyServer(function(input, output, session) {
   
   # download dimension reduction plots
   output$download_dim_all <- downloadHandler(
-    filename = function() { paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted", input$Dim_Type, "all.genes.html", sep=".") },
+    filename = function() { paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted", input$Dim_Type, "all.genes.html", sep=".") },
     content = function(file) {
       valid_load()
       valid_iasva()
@@ -1700,7 +2028,10 @@ server <- shinyServer(function(input, output, session) {
         if (isolate(input$Dim_Color == "No Color")) {
           # make interactive plots
           py <- plot_ly(dataTables$dim_orig, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
-                        mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = "")) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+                        mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                        marker = list(
+                          opacity = 0.5
+                        )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
           htmlwidgets::saveWidget(py, file)  
         } else {
           # factor for coloring
@@ -1709,7 +2040,10 @@ server <- shinyServer(function(input, output, session) {
           # make interactive plots
           py <- plot_ly(dataTables$dim_orig, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
                         mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
-                        color = ~fac_int) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+                        color = ~fac_int) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""),
+                                                     marker = list(
+                                                       opacity = 0.5
+                                                     ))
           htmlwidgets::saveWidget(py, file)  
         }
         
@@ -1718,7 +2052,10 @@ server <- shinyServer(function(input, output, session) {
         #if no coloring
         if (isolate(input$Dim_Color == "No Color")) {
           py <- plot_ly(dataTables$dim_orig, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
-                        mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = "")) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+                        mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                        marker = list(
+                          opacity = 0.5
+                        )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
           htmlwidgets::saveWidget(py, file)
         } else {
           # factor for coloring
@@ -1727,14 +2064,38 @@ server <- shinyServer(function(input, output, session) {
           # make interactive plots
           py <- plot_ly(dataTables$dim_orig, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
                         mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
-                        color = ~fac_int) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+                        color = ~fac_int, marker = list(
+                          opacity = 0.5
+                        )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+          htmlwidgets::saveWidget(py, file)  
+        }
+      } else if (input$Dim_Type == "Classical Metric MDS") {
+        
+        #if no coloring
+        if (isolate(input$Dim_Color == "No Color")) {
+          py <- plot_ly(dataTables$dim_orig, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                        mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                        marker = list(
+                          opacity = 0.5
+                        )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+          htmlwidgets::saveWidget(py, file)
+        } else {
+          # factor for coloring
+          id_fac <- which(colnames(dataTables$meta_df) == input$Dim_Color)
+          fac_int <- as.factor(dataTables$meta_df[, id_fac])
+          # make interactive plots
+          py <- plot_ly(dataTables$dim_orig, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                        mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                        color = ~fac_int, marker = list(
+                          opacity = 0.5
+                        )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
           htmlwidgets::saveWidget(py, file)  
         }
       }
     }
   )
   output$download_dim_marker <- downloadHandler(
-    filename = function() { paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted", input$Dim_Type, "marker.genes.html", sep=".") },
+    filename = function() { paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted", input$Dim_Type, "marker.genes.html", sep=".") },
         content = function(file) {
           valid_load()
           valid_iasva()
@@ -1743,7 +2104,10 @@ server <- shinyServer(function(input, output, session) {
             # if no color
             if (isolate(input$Dim_Color == "No Color")) {
               py <- plot_ly(dataTables$dim_mark, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
-                            mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = "")) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
+                            mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                            marker = list(
+                              opacity = 0.5
+                            )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
               htmlwidgets::saveWidget(py, file)
             } else {
               # factor for coloring
@@ -1751,22 +2115,54 @@ server <- shinyServer(function(input, output, session) {
               fac_int <- as.factor(dataTables$meta_df[, id_fac])
               py <- plot_ly(dataTables$dim_mark, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
                             mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
-                            color = ~fac_int) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
+                            color = ~fac_int, marker = list(
+                              opacity = 0.5
+                            )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
               htmlwidgets::saveWidget(py, file)
             }
             
           } else if (input$Dim_Type == "t-SNE") {
             if (isolate(input$Dim_Color == "No Color")) {
               py <- plot_ly(dataTables$dim_mark, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
-                            mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = "")) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
+                            mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
+                            marker = list(
+                              opacity = 0.5
+                            )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
               htmlwidgets::saveWidget(py, file)
             } else {
               id_fac <- which(colnames(dataTables$meta_df) == input$Dim_Color)
               fac_int <- as.factor(dataTables$meta_df[, id_fac])
               py <- plot_ly(dataTables$dim_mark, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
                             mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_mark), sep = ""),
-                            color = ~fac_int) %>% layout(title = paste("IA-SVA Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
+                            color = ~fac_int,
+                            marker = list(
+                              opacity = 0.5
+                            )) %>% layout(title = paste(input$sva_method, " Genes (n = ", nrow(dataTables$exp_norm[dataTables$markers_formatted[,1],]), "; ", dataTables$chosen_svs, ")", sep = ""))
               htmlwidgets::saveWidget(py, file)
+            }
+          } else if (input$Dim_Type == "Classical Metric MDS") {
+            
+            # if no coloring
+            if (isolate(input$Dim_Color == "No Color")) {
+              # make interactive plots
+              py <- plot_ly(dataTables$dim_orig, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                            mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                            marker = list(
+                              opacity = 0.5
+                            )) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""))
+              htmlwidgets::saveWidget(py, file)  
+            } else {
+              # factor for coloring
+              id_fac <- which(colnames(dataTables$meta_df) == input$Dim_Color)
+              fac_int <- as.factor(dataTables$meta_df[, id_fac])
+              # make interactive plots
+              py <- plot_ly(dataTables$dim_orig, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+                            mode = "markers", text = paste("Cell ID: ", rownames(dataTables$dim_orig), sep = ""),
+                            color = ~fac_int) %>% layout(title = paste("All Genes (n = ", nrow(dataTables$exp_norm), ")", sep = ""),
+                                                         marker = list(
+                                                           opacity = 0.5
+                                                         ))
+              htmlwidgets::saveWidget(py, file)  
             }
           }
         }
@@ -1774,7 +2170,7 @@ server <- shinyServer(function(input, output, session) {
   
   # download dimension reduction coordinates
   output$download_all_coordinates <- downloadHandler(
-    filename = function() { paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted", input$Dim_Type, "all.genes.coordinates.csv", sep=".") },
+    filename = function() { paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted", input$Dim_Type, "all.genes.coordinates.csv", sep=".") },
     content = function(file) {
       valid_load()
       valid_iasva()
@@ -1784,7 +2180,7 @@ server <- shinyServer(function(input, output, session) {
   )
   
   output$download_marker_coordinates <- downloadHandler(
-    filename = function() { paste("IASVA", input$norm_method, "normalized", input$known_factors, "adjusted", input$Dim_Type, "marker.genes.coordinates.csv", sep=".") },
+    filename = function() { paste(input$sva_method, input$norm_method, "normalized", input$known_factors, "adjusted", input$Dim_Type, "marker.genes.coordinates.csv", sep=".") },
     content = function(file) {
       valid_load()
       valid_iasva()
@@ -1796,10 +2192,10 @@ server <- shinyServer(function(input, output, session) {
   # download manual/instructions
   output$Download_Manual <- downloadHandler(
     filename = function() {
-      paste("Data/IASVA_Shiny_App_Manual.docx", sep = "")
+      paste("Data/VSVA_Shiny_App_Manual.docx", sep = "")
     },
     content = function(file) {
-      file.copy("Data/IASVA_Shiny_App_Manual.docx", file)
+      file.copy("Data/VSVA_Shiny_App_Manual.docx", file)
     }
   )
   
