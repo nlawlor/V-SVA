@@ -20,14 +20,14 @@ To facilitate the interpretation of surrogate variables detected by algorithms i
 
 ### Tutorial/Guide
 
-For an in depth guide of how to use this shiny app, please see the Word Document at: https://github.com/nlawlor/iasva_shiny/blob/master/Data/IASVA_Shiny_App_Manual.docx
+For an in depth guide of how to use this shiny app, please see the Word Document at: https://github.com/nlawlor/V-SVA/blob/master/Data/VSVA_Shiny_App_Manual.docx
 
 ### Required Input Files 
 
 1. The app requires first a matrix of gene expression data (rows as genes, columns as samples). This file may be formatted as a tab-delimited text file, .CSV file, or .Rds object.  
 
 An example 10X Genomics single cell RNA-seq expression matrix obtained from [*Kang et al. 2017*](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5784859/) which contains a subset of 200 human peripheral blood mononuclear cells (PBMCs) 
-is provided at: https://github.com/nlawlor/iasva_shiny/blob/master/Data/test.exp.txt and can be used to test the app.
+is provided at: https://github.com/nlawlor/V-SVA/blob/master/Data/test.exp.txt and can be used to test the app.
 
 This matrix, when loaded into R:
 
@@ -36,11 +36,11 @@ df <- read.delim("Data/test.exp.txt", header = T, check.names = F, stringsAsFact
 df[1:4, 1:4]
 ```
 
-Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/exp.matrix.png)
+Looks like this: ![](https://github.com/nlawlor/V-SVA/blob/master/img/exp.matrix.png)
 
 2. (Optional) Users may also provide a matrix of sample metadata (rows as sample names, columns as traits). Like the expression matrix, this file may be formatted as a tab-delimited text file, .CSV file, or .Rds object.  
 
-An example metadata file for the above expression matrix can be found at: https://github.com/nlawlor/iasva_shiny/blob/master/Data/test.metadata.txt.
+An example metadata file for the above expression matrix can be found at: https://github.com/nlawlor/V-SVA/blob/master/Data/test.metadata.txt.
 
 This matrix, when loaded into R:
 
@@ -48,7 +48,7 @@ This matrix, when loaded into R:
 meta <- read.delim("Data/test.metadata.txt", header = T, check.names = F, stringsAsFactors = F, row.names = 1)
 meta[1:4, ]
 ```
-Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/metadata.png)
+Looks like this: ![](https://github.com/nlawlor/V-SVA/blob/master/img/metadata.png)
 
 **Please Note: The sample identifiers contained in the rows of the metadata matrix should be the same as the identifiers provided in the columns of the expression matrix**
 
@@ -58,19 +58,19 @@ Looks like this: ![](https://github.com/nlawlor/iasva_shiny/blob/master/img/meta
 
 * **Identify hidden sources of variability in transcriptomic data:**
 
-![](https://github.com/nlawlor/iasva_shiny/blob/master/img/sv.plots.png)
+![](https://github.com/nlawlor/V-SVA/blob/master/img/sv.plots.png)
 
 * **Discover marker genes associated with a variable of interest:**
 
-![](https://github.com/nlawlor/iasva_shiny/blob/master/img/marker.genes.png)
+![](https://github.com/nlawlor/V-SVA/blob/master/img/marker.genes.png)
 
 * **Use molecular pathways/genesets to annotated sources of variation:**
 
-![](https://github.com/nlawlor/iasva_shiny/blob/master/img/pathway.analysis.png)
+![](https://github.com/nlawlor/V-SVA/blob/master/img/pathway.analysis.png)
 
 * **Dimension reduction and interactive visualization of data:**
 
-![](https://github.com/nlawlor/iasva_shiny/blob/master/img/tsne.gif)
+![](https://github.com/nlawlor/V-SVA/blob/master/img/tsne.gif)
 
 ***
 
