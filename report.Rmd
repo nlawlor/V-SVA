@@ -1,0 +1,392 @@
+---
+title: "Report of Parameters used with V-SVA"
+output: html_document
+date: "`r Sys.time()`"
+fig_width: 12
+fig_height: 12 
+params:
+  dt: NA
+---
+
+##Expression Data and Sample Metadata Provided
+```{r}
+# dimensions of expression matrix
+if (!is.null(params$dt$exp_norm)) {
+  dim(params$dt$exp_norm)
+}
+# dimensions of metadata, if not provided only Genes_Detected and Log_Total_Counts determined
+if (!is.null(params$dt$meta_df)) {
+  dim(params$dt$meta_df)
+  head(params$dt$meta_df)  
+}
+
+```
+
+##Quality Control of Expression Data: Number of Features Detected in each Sample
+```{r, eval=FALSE}
+# binarize data to determine which features are detected in each sample
+bin_data <- params$dt$exp_norm
+bin_data[bin_data < 1] <- 0
+bin_data[bin_data >= 1] <- 1
+num.exp <- apply(bin_data,2,sum)
+params$dt$detect_num <- num.exp
+```
+
+```{r}
+if (!is.null(params$dt$detect_num)) {
+  summ <- summary(params$dt$detect_num)
+  # histogram of number of features detected in each sample
+  hist(params$dt$detect_num, col = "dodgerblue", main="", 
+     ylab = "Samples (n)", xlab = "Number of features detected in each sample")
+  legend("topright", legend = paste(names(summ), round(summ, digits = 2), sep = " "), title = "Summary of features detected")
+}
+```
+
+##Feature Pre-processing Options (normalization, sample and feature filtering)
+#### Remove samples based on number of detected features
+```{r}
+# were cells filtered based on genes detected?
+if (params$dt$cell_filter_choice) {
+ print(paste("Removing cells that have less than ", params$dt$cellfilt_number, " features detected,", sep = "")) 
+} else {
+  print("Cells were not filtered based on features detected")
+}
+```
+
+```{r, eval=FALSE}
+# code to filter cells based on features detected
+num.sel <- params$dt$detect_num[params$dt$detect_num >= params$dt$cellfilt_number]
+# subset data
+params$dt$exp_norm <- params$dt$exp_norm[, names(num.sel)]
+params$dt$meta_df <- params$dt$meta_df[names(num.sel), ]
+
+```
+
+#### Down-sample the number of samples included in the analysis (to increase computational efficiency)
+```{r}
+# were cells down-sampled to a certain number to speed up computation?
+if (params$dt$cell_downsample_choice) {
+ print(paste("Cells were down-sampled to ", params$dt$cell_downsample_number, " cells", sep = "")) 
+} else {
+  print("Cells were not down-sampled")
+}
+```
+
+```{r, eval=FALSE}
+# code to down-sample cells
+set.seed(1)
+dw_samp <- base::sample(x = 1:ncol(params$dt$exp_norm), size = params$dt$cell_downsample_number)
+# subset data
+params$dt$exp_norm <- params$dt$exp_norm[, dw_samp]
+params$dt$meta_df <- params$dt$meta_df[dw_samp, ]
+```
+
+#### Remove features not detected in samples
+```{r}
+# were features filtered?
+if (params$dt$gene_filter_choice) {
+ print(paste("Features were filtered using ", 
+             params$dt$gene_filter_method,
+             ".", nrow(params$dt$exp_norm), " Features with ", params$dt$gene_count_num, 
+             " or more counts in at least ", params$dt$gene_cell_num,
+             " cells were retained" , sep = "")) 
+} else {
+  print("Features were not filtered based on detection rate in samples")
+}
+    
+```
+
+#### Choose normalization method for expression data
+```{r, eval=FALSE}
+# code for gene filtering methods: all code is displayed regardless of method chosen
+filter <- apply(params$dt$exp_norm, 1, function(x) length(x[x>isolate(input$Count_num)])>=isolate(input$Cell_num))
+params$dt$exp_norm <- params$dt$exp_norm[filter,]
+# normalize the data
+# using CPM method
+if (isolate(input$norm_method) == "CPM") {
+  params$dt$exp_norm <- edgeR::cpm(params$dt$exp_norm)
+  # using quantile normalization method
+} else if (isolate(input$norm_method) == "Quantile") {
+  params$dt$exp_norm <- normalize.quantiles(params$dt$exp_norm)
+  # scran method
+} else if (isolate(input$norm_method) == "scran") {
+  sce <- SingleCellExperiment(list(counts=params$dt$exp_norm))
+  sce <- computeSumFactors(sce)
+  sce <- normalize(sce)
+  params$dt$exp_norm <- exprs(sce)
+  # no normalization
+} else if (isolate(input$norm_method) == "None") {
+  params$dt$exp_norm <- params$dt$exp_norm
+}
+```
+
+##Surrogate Variable Analysis (SVA)
+```{r}
+# which method was used
+if (!is.null(params$dt$sva_method_use)) {
+  print(paste("The surrogate variable analysis method chosen was: ", params$dt$sva_method_use, sep = ""))  
+}
+
+# which known factors were adjusted for
+if (!is.null(params$dt$known_factors_use)) {
+  print(paste("The following known factor(s) were adjusted for: ", params$dt$known_factors_use, sep = ""))
+}
+
+# the number of SV's 
+if (!is.null(params$dt$iasva.res)) {
+  print(paste("The number of SV's/Factors identified: ", ncol(params$dt$iasva.res$sv), sep = ""))
+}
+```
+
+```{r, eval=FALSE}
+# code for SVA methods
+# create model matrix with known factors to adjust for
+id_mod <- which(colnames(params$dt$meta_df) %in% params$dt$known_factors_use)
+if (length(id_mod) > 1) {
+  formdf1 <- as.formula(paste("~", colnames(params$dt$meta_df)[id_mod][1], "+", paste(colnames(params$dt$meta_df)[id_mod[2:length(id_mod)]],collapse="+"), sep = ""))
+  mod <- model.matrix(formdf1, data = params$dt$meta_df)
+} else {
+  varf1 <- as.factor(params$dt$meta_df[, id_mod])
+  mod <- model.matrix(~varf1, data = params$dt$meta_df)
+}
+# create summarized experiment for expression matrix to later use for marker gene identification
+summ_exp <- SummarizedExperiment(assays = as.matrix(params$dt$exp_norm))
+params$dt$summ_exp <- summ_exp
+      
+# if user chose IA-SVA, then perform following
+if (isolate(params$dt$sva_method_use == "IA-SVA")) {
+# depending on which ia-sva parameters were chosen, evaluate
+  if (isolate(input$iasva_param == "Percentage Threshold")) {
+    params$dt$iasva.res <- fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE,
+                                      pct.cutoff = isolate(input$pct_cutt), num.sv = NULL)
+  } else if (isolate(input$iasva_param == "Number of SVs")) {
+    params$dt$iasva.res <- fast_iasva(summ_exp, mod[,-1, drop = F], verbose=FALSE,
+                                      pct.cutoff = isolate(input$pct_cutt), num.sv = isolate(input$num_of_svs))
+  } 
+  # else if choose SVA method
+  } else if (isolate(params$dt$sva_method_use == "SVA")) {
+    # perform sva analysis with specified svs
+    sva.res <- svaseq(params$dt$exp_norm, mod = mod, mod0 = mod[,1], n.sv = isolate(input$sva_num))
+    colnames(sva.res$sv) <- paste("SV", 1:ncol(sva.res$sv), sep = "")
+    params$dt$iasva.res <- sva.res
+        
+  # else if choose zinb-wave method
+  } else if (isolate(params$dt$sva_method_use == "ZINB-WaVE")) {
+    # perform analysis with specified latent factors
+    zinb.matrix <- params$dt$exp_norm
+    # coerce to integer
+    mode(zinb.matrix) <- "integer"
+    zinb.res <- zinbFit(Y = zinb.matrix, X = mod[,-1, drop = F], K = isolate(input$zinb_num))
+    # extract factors
+    zinb.fac <- getW(zinb.res)
+    colnames(zinb.fac) <- paste("SV", 1:ncol(zinb.fac), sep = "")
+    params$dt$iasva.res <- list(sv = zinb.fac)
+  }
+      
+```
+
+## Correlation Plot of SV's and Sample Metadata
+```{r}
+# change factors to numeric for correlation
+if (!is.null(params$dt$meta_df) & !is.null(params$dt$iasva.res)) {
+  meta_sel <- params$dt$meta_df
+for (jcol in 1:ncol(meta_sel)) {
+  meta_sel[,jcol] <- as.numeric(as.factor(meta_sel[,jcol]))
+}
+iasva_vars <- cbind(params$dt$iasva.res$sv, meta_sel)
+# need to append column names to matrix
+colnames(iasva_vars) <- c(paste("SV", 1:ncol(params$dt$iasva.res$sv), sep = ""),
+                          colnames(params$dt$meta_df))
+col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+corrplot(abs(cor(iasva_vars)), type = "upper", method = "color",
+         col = col(200), number.cex = 1,
+         addCoef.col = "black",
+         tl.col = "black", tl.srt = 90, diag = FALSE)
+}
+
+```
+
+## Paired SV Plots
+```{r}
+if (!is.null(params$dt$iasva.res)) {
+  iasva.sv <- as.data.frame(params$dt$iasva.res$sv)
+rownames(iasva.sv) <- colnames(params$dt$exp_norm)
+pairs(iasva.sv, main="", pch=20, cex=0.5, lower.panel = NULL)
+}
+
+```
+
+## Interactive Paired SV Plots
+```{r}
+if (!is.null(params$dt$iasva.res)) {
+  iasva.sv <- as.data.frame(params$dt$iasva.res$sv)
+  rownames(iasva.sv) <- colnames(params$dt$exp_norm)
+  plot_ly(iasva.sv, x = ~SV1, y = ~SV2, type = "scatter",
+          mode = "markers", text = paste("Cell ID: ", rownames(iasva.sv), sep = ""),
+          marker = list(
+            opacity = 0.5
+            )
+  )
+}
+```
+
+## Identifying Marker Features associated with SV's
+```{r, eval=FALSE}
+# identify which svs were chosen for marker analysis
+id_sv_mark <- which(colnames(params$dt$iasva.res$sv) %in% isolate(input$SV_marks))
+marker_genes <- iasva::find_markers(Y = params$dt$summ_exp,
+                                    iasva.sv = as.matrix(params$dt$iasva.res$sv[, id_sv_mark, drop=FALSE]),
+                                    rsq.cutoff = isolate(input$rsqcutoff), method = isolate(input$mark_sig), sig.cutoff = isolate(input$mark_cutoff))
+params$dt$markers <- marker_genes
+```
+
+## Heatmap of Marker Features Determined from SVA Analysis
+```{r}
+if (!is.null(params$dt$markers)) {
+  all_marks <- params$dt$markers$All_Unique_Markers
+log_mat <- log(as.matrix(params$dt$exp_norm[all_marks,])+1)
+# remove any NA's from matrix
+log_mat <- log_mat[complete.cases(log_mat),]
+pheatmap(log_mat, show_colnames = FALSE,
+         show_rownames = TRUE,
+         clustering_method = "ward.D2")
+}
+```
+
+## Dimension Reduction
+```{r, eval=FALSE}
+set.seed(1)
+# transpose matrix
+trans_orig <- t(log(params$dt$exp_norm+1))
+# remove any zeros
+params$dt$pre_dim_orig <- trans_orig[, apply(trans_orig, 2, var, na.rm = TRUE) != 0]
+# Principal component analysis (PCA) for all genes
+dim_orig <- prcomp(x = params$dt$pre_dim_orig, center = TRUE, scale. = TRUE)
+dim_orig_mat <- dim_orig$x
+rownames(dim_orig_mat) <- colnames(params$dt$exp_norm)
+params$dt$dim_orig <- as.data.frame(dim_orig_mat)
+
+### Code for T-SNE ####
+# T-SNE analysis (PCA) for all genes
+# not comupted
+# dim_orig <- Rtsne(X = params$dt$pre_dim_orig, dims = 3)
+# dim_orig_mat <- dim_orig$Y
+        
+#### Code for MDS ###
+# dim_orig <- cmdscale(d = dist(params$dt$pre_dim_orig), k = 3)
+# dim_orig_mat <- dim_orig
+# rownames(dim_orig_mat) <- colnames(params$dt$exp_norm)
+# colnames(dim_orig_mat) <- c("MDS1", "MDS2", "MDS3")
+
+# Principal component analysis for SV-selected genes
+# transpose matrix
+trans_mark <- t(params$dt$exp_norm[params$dt$markers_formatted[,1],])
+# remove any zeros
+params$dt$pre_dim_mark <- trans_mark[, apply(trans_mark, 2, var, na.rm = TRUE) != 0]
+dim_mark <- prcomp(x = params$dt$pre_dim_mark, center = TRUE, scale. = TRUE)
+dim_mark_mat <- dim_mark$x
+rownames(dim_mark_mat) <- colnames(params$dt$exp_norm)
+params$dt$dim_mark <- as.data.frame(dim_mark_mat)
+
+```
+
+### Dimension Reduction Visualization (using all features)
+```{r}
+if (!is.null(params$dt$dim_method)) {
+  # print your dimension reduction method
+  print(paste("Dimension reduction method chosen: ", params$dt$dim_method, sep = ""))
+
+  # if chosen PCA 
+  if (params$dt$dim_method == "PCA") {
+    # 3D interactive dimension reduction plot using all features
+    plot_ly(params$dt$dim_orig, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
+          mode = "markers", text = paste("Cell ID: ", rownames(params$dt$dim_orig), sep = ""),
+          marker = list(
+            opacity = 0.5
+          )) %>% layout(title = paste("All Genes (n = ", nrow(params$dt$exp_norm), ")", sep = ""))
+  } else if (params$dt$dim_method == "t-SNE") {
+    plot_ly(params$dt$dim_orig, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
+            mode = "markers", text = paste("Cell ID: ", rownames(params$dt$dim_orig), sep = ""),
+            marker = list(
+              opacity = 0.5
+            )) %>% layout(title = paste("All Genes (n = ", nrow(params$dt$exp_norm), ")", sep = ""))
+  } else if (params$dt$dim_method == "Classical Metric MDS") {
+    plot_ly(params$dt$dim_orig, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+            mode = "markers", text = paste("Cell ID: ", rownames(params$dt$dim_orig), sep = ""),
+            marker = list(
+              opacity = 0.5
+            )) %>% layout(title = paste("All Genes (n = ", nrow(params$dt$exp_norm), ")", sep = ""))
+  }
+}
+```
+
+### Dimension Reduction Visualization (using SV-associated features)
+```{r}
+if (!is.null(params$dt$dim_method)) {
+  # 3D interactive dimension reduction plot using SV selected features
+  if (params$dt$dim_method == "PCA") {
+    plot_ly(params$dt$dim_mark, x = ~PC1, y = ~PC2, z = ~PC3, type = "scatter3d",
+          mode = "markers", text = paste("Cell ID: ", rownames(params$dt$dim_mark), sep = ""),
+          marker = list(
+            opacity = 0.5
+          )) %>% layout(title = paste(params$dt$sva_method_use, " Genes (n = ", nrow(params$dt$exp_norm[params$dt$markers_formatted[,1],]),
+                                      ";",params$dt$chosen_svs, ")", sep = ""))
+  } else if (params$dt$dim_method == "t-SNE") {
+    plot_ly(params$dt$dim_mark, x = ~tSNE1, y = ~tSNE2, z = ~tSNE3, type = "scatter3d",
+            mode = "markers", text = paste("Cell ID: ", rownames(params$dt$dim_mark), sep = ""),
+            marker = list(
+              opacity = 0.5
+            )) %>% layout(title = paste(params$dt$sva_method_use, " Genes (n = ", nrow(params$dt$exp_norm[params$dt$markers_formatted[,1],]), "; ",
+                                        params$dt$chosen_svs, ")", sep = ""))
+  } else if (params$dt$dim_method == "Classical Metric MDS") {
+    plot_ly(params$dt$dim_mark, x = ~MDS1, y = ~MDS2, z = ~MDS3, type = "scatter3d",
+            mode = "markers", text = paste("Cell ID: ", rownames(params$dt$dim_mark), sep = ""),
+            marker = list(
+              opacity = 0.5
+              )) %>% layout(title = paste(params$dt$sva_method_use, " Genes (n = ", nrow(params$dt$exp_norm[params$dt$markers_formatted[,1],]), "; ",
+                                          params$dt$chosen_svs, ")", sep = ""))  
+  }
+}
+
+```
+
+## Gene Enrichment Analysis
+```{r, eval=FALSE}
+# convert gene symbols to Entrez ID (for example for human data)
+gene.df <- bitr(gene, fromType = "SYMBOL",
+                        toType = c("ENSEMBL", "ENTREZID"),
+                        OrgDb = org.Hs.eg.db)
+params$dt$species <- org.Hs.eg.db
+params$dt$gene.df <- gene.df
+
+# analysis for GO biological process terms (as an example)
+ego <- enrichGO(gene = params$dt$gene.df$ENTREZID,
+                OrgDb = params$dt$species,
+                keyType = "ENTREZID",
+                ont = "BP",
+                pvalueCutoff = isolate(input$pvalue_cutoff), pAdjustMethod = isolate(input$pvalue_correct),
+                qvalueCutoff = isolate(input$path_cutoff),
+                minGSSize = 5,
+                readable = TRUE)
+params$dt$enrich_res <- ego
+params$dt$category_number <- input$path_viz_num
+params$dt$pathway_name <- input$Path_Type
+```
+
+```{r}
+# visualize pathway results
+if (!is.null(params$dt$enrich_res)) {
+  print(paste("Type of gene enrichment analysis performed: ", params$dt$pathway_name, sep = ""))
+  print(paste("Show this many categories: ", params$dt$category_number, sep = ""))
+
+  dp <- clusterProfiler::dotplot(object = params$dt$enrich_res, showCategory = params$dt$category_number) + ggtitle(params$dt$pathway_name)
+  plot(dp)
+}
+```
+
+
+## Session Information
+```{r}
+sessionInfo()
+```
+
