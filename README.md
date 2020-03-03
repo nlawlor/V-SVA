@@ -2,13 +2,15 @@
 
 ### An R Shiny application for detecting and annotating hidden sources of variation in single cell RNA-seq data
 
-## Last Update: January, 29th, 2020
+## Last Update: March, 3rd, 2020
 
 Authors: *Nathan Lawlor*, *Eladio J. Marquez*, *Donghyung Lee*, and *Duygu Ucar*
 
 App Maintainer: *Nathan Lawlor*
 
 App Location:  https://vsva.jax.org
+
+Manuscript now published in *Bioinformatics*! For more information on our Shiny app, please see: https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/btaa128/5771333
 
 ***
 
@@ -80,6 +82,9 @@ Looks like this: ![](https://github.com/nlawlor/V-SVA/blob/master/img/metadata.p
 
 * **V-SVA** is currently hosted on dedicated **The Jackson Laboratory** Shiny servers (two 24 Core and 192GB RAM servers) and is freely available [here]( https://vsva.jax.org).
 
+### Publication
+
+Our method has been published in *Bioinformatics* as an open access application note! To read more, please find the article which is freely available here: https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/btaa128/5771333
 
 ### Other Resources
 
